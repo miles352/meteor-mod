@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "id": "addon-template",
+  "id": "jefffmod",
   "version": "${version}",
-  "name": "Addon Template",
-  "description": "An addon template for the Meteor addons.",
+  "name": "Jefff's Mods",
+  "description": "idk some mods i wanted",
   "authors": [
-    "seasnail"
+    "jefff"
   ],
   "contact": {
-    "repo": "https://github.com/MeteorDevelopment/meteor-addon-template"
+    "sources": "https://discord.com/users/769415977439592468"
   },
   "icon": "assets/template/icon.png",
   "environment": "client",
