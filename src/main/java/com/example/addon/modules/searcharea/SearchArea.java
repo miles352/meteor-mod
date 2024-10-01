@@ -53,10 +53,17 @@ public class SearchArea extends Module {
         .build()
     );
 
-    public final Setting<Boolean> logToWebhook = sgGeneral.add(new BoolSetting.Builder()
-        .name("Log To Webhook")
-        .description("If you would like to log the chat to a webhook (for stash finder or just for chat)")
-        .defaultValue(false)
+    public final Setting<String> saveLocation = sgGeneral.add(new StringSetting.Builder()
+        .name("Save Name")
+        .description("The name to use for the folder that saves data, if you leave it blank, no data will be saved.")
+        .defaultValue("")
+        .build()
+    );
+
+    public final Setting<WebhookSettings> webhookMode = sgGeneral.add(new EnumSetting.Builder<WebhookSettings>()
+        .name("Webhook Mode")
+        .description("The mode for discord webhooks.")
+        .defaultValue(WebhookSettings.Off)
         .build()
     );
 
@@ -64,7 +71,23 @@ public class SearchArea extends Module {
         .name("Webhook Link")
         .description("A discord webhook link. Looks like this: https://discord.com/api/webhooks/webhookUserId/webHookTokenOrSomething")
         .defaultValue("")
-        .visible(logToWebhook::get)
+        .visible(() -> webhookMode.get() != WebhookSettings.Off)
+        .build()
+    );
+
+    public final Setting<Boolean> pingForStashFinder = sgGeneral.add(new BoolSetting.Builder()
+        .name("Ping For Stash Finder")
+        .description("Pings you for stash finder and base finder messages")
+        .defaultValue(false)
+        .visible(() -> webhookMode.get() == WebhookSettings.LogBoth || webhookMode.get() == WebhookSettings.LogStashes)
+        .build()
+    );
+
+    public final Setting<String> discordId = sgGeneral.add(new StringSetting.Builder()
+        .name("Discord ID")
+        .description("Your discord ID")
+        .defaultValue("")
+        .visible(() -> webhookMode.get() != WebhookSettings.Off && pingForStashFinder.get())
         .build()
     );
 
@@ -126,6 +149,14 @@ public class SearchArea extends Module {
     private void onMessageReceive(ReceiveMessageEvent event)
     {
         currentMode.onMessageReceive(event);
+    }
+
+    public enum WebhookSettings
+    {
+        Off,
+        LogChat,
+        LogStashes,
+        LogBoth
     }
 
 }

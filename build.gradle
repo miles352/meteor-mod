@@ -1,5 +1,5 @@
 plugins {
-    id "fabric-loom" version "1.6-SNAPSHOT"
+    id "fabric-loom" version "1.5-SNAPSHOT"
 }
 
 sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
@@ -17,6 +17,28 @@ repositories {
         name = "Meteor Dev Snapshots"
         url = "https://maven.meteordev.org/snapshots"
     }
+
+//    flatDir {
+//        dirs 'libs'
+//    }
+//
+//    maven {
+//        name = 'babbaj-repo'
+//        url = 'https://babbaj.github.io/maven/'
+//    }
+}
+
+def urlFile = { url, name, version ->
+    File file = new File("$rootDir/lib/${name}-${version}.jar")
+    file.parentFile.mkdirs()
+    if (!file.exists()) {
+        new URL(url).withInputStream { downloadStream ->
+            file.withOutputStream { fileOut ->
+                fileOut << downloadStream
+            }
+        }
+    }
+    return [name: name, version: version]
 }
 
 dependencies {
@@ -27,6 +49,12 @@ dependencies {
 
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
+
+//    modImplementation "baritone-api-fabric:baritone-api-fabric:1.10.2"
+//    modImplementation urlFile("https://github.com/cabaletta/baritone/releases/download/v1.10.2/baritone-api-fabric-1.10.2.jar", 'baritone-api-fabric', '1.10.2')
+//    modCompileOnly files("libs/baritone-api-fabric-1.10.2.jar")
+//    implementation "dev.babbaj:nether-pathfinder:1.4.1"
+//    compile 'javax.websocket:javax.websocket-api:1.1'
 }
 
 processResources {

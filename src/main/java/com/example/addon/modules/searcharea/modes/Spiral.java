@@ -6,10 +6,13 @@ import net.minecraft.util.math.BlockPos;
 
 import java.io.*;
 
+import static com.example.addon.Utils.pointTowards;
+
 public class Spiral extends SearchAreaMode
 {
     private PathingDataSpiral pd;
     private boolean goingToStart = true;
+    private long startTime;
 
     public Spiral()
     {
@@ -19,22 +22,24 @@ public class Spiral extends SearchAreaMode
     @Override
     public void onActivate()
     {
-        goingToStart = true;
-        File file = getJsonFile(super.toString());
-        if (file.exists())
-        {
-            try {
-                FileReader reader = new FileReader(file);
-                pd = GSON.fromJson(reader, PathingDataSpiral.class);
-                reader.close();
-            } catch (Exception ignored) {
-
+            startTime = System.nanoTime();
+            goingToStart = true;
+            File file = getJsonFile(super.toString());
+            if (file == null || !file.exists())
+            {
+                pd = new PathingDataSpiral(mc.player.getBlockPos(), mc.player.getBlockPos(), -90.0f, true, 0, 0);
             }
-        }
-        else
-        {
-            pd = new PathingDataSpiral(mc.player.getBlockPos(), mc.player.getBlockPos(), -90.0f, true, 0, 0);
-        }
+            else
+            {
+                try {
+                    FileReader reader = new FileReader(file);
+                    pd = GSON.fromJson(reader, PathingDataSpiral.class);
+                    reader.close();
+                } catch (Exception ignored) {
+
+                }
+            }
+
     }
 
     @Override
@@ -48,16 +53,31 @@ public class Spiral extends SearchAreaMode
     @Override
     public void onTick()
     {
+        // autosave every 10 minutes in case of crashes
+        if (System.nanoTime() - startTime > 6e11)
+        {
+            startTime = System.nanoTime();
+            super.saveToJson(goingToStart, pd);
+        }
+
+        if (System.nanoTime() < paused)
+        {
+            setPressed(mc.options.forwardKey, false);
+            return;
+        }
+
+
         if (goingToStart)
         {
-            if (Math.sqrt(mc.player.getBlockPos().getSquaredDistance(pd.currPos)) < 5)
+
+            if (Math.sqrt(mc.player.getBlockPos().getSquaredDistance(pd.currPos.getX(), mc.player.getY(), pd.currPos.getZ())) < 5)
             {
                 goingToStart = false;
                 mc.player.setVelocity(0, 0, 0);
             }
             else
             {
-                pointTowards(pd.currPos);
+                pointTowards(pd.currPos.toCenterPos(), mc);
                 setPressed(mc.options.forwardKey, true);
             }
             return;

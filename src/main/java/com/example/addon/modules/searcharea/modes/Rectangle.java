@@ -12,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 
 import java.io.*;
 
+import static com.example.addon.Utils.pointTowards;
 import static meteordevelopment.meteorclient.utils.player.ChatUtils.info;
 
 public class Rectangle extends SearchAreaMode
@@ -19,6 +20,7 @@ public class Rectangle extends SearchAreaMode
 
     private PathingDataRectangle pd;
     private boolean goingToStart = true;
+    private long startTime;
 
     public Rectangle() {
         super(SearchAreaModes.Rectangle);
@@ -27,25 +29,26 @@ public class Rectangle extends SearchAreaMode
     @Override
     public void onActivate()
     {
-        goingToStart = true;
-        File file = getJsonFile(super.toString());
-        if (file.exists())
+        if (!searchArea.saveLocation.get().isBlank())
         {
-            try {
-                FileReader reader = new FileReader(file);
-                pd = GSON.fromJson(reader, PathingDataRectangle.class);
-                reader.close();
-            } catch (Exception ignored) {
+            goingToStart = true;
+            File file = getJsonFile(super.toString());
+            if (file == null || !file.exists())
+            {
+                // set currPos to startpos if it is not read from file, so that the bot travels to the startpoint and not where the player currently is
+                pd = new PathingDataRectangle(searchArea.startPos.get(), searchArea.targetPos.get(), searchArea.startPos.get(), 90, true, (int)mc.player.getZ());
+            }
+            else
+            {
+                try {
+                    FileReader reader = new FileReader(file);
+                    pd = GSON.fromJson(reader, PathingDataRectangle.class);
+                    reader.close();
+                } catch (Exception ignored) {
 
+                }
             }
         }
-        else
-        {
-            // set currPos to startpos if it is not read from file, so that the bot travels to the startpoint and not where the player currently is
-            pd = new PathingDataRectangle(searchArea.startPos.get(), searchArea.targetPos.get(), searchArea.startPos.get(), 90, true, (int)mc.player.getZ());
-        }
-
-
     }
 
     @Override
@@ -61,7 +64,7 @@ public class Rectangle extends SearchAreaMode
         Module module = Modules.get().get(boatFly);
         double speedBPS = (double)module.settings.get("speed").get();
         double rowDistance = Math.abs(pd.initialPos.getX() - pd.targetPos.getX());
-        int rowCount = Math.abs(pd.initialPos.getZ() - pd.targetPos.getZ()) / 16 / searchArea.rowGap.get();
+        int rowCount = Math.abs(pd.currPos.getZ() - pd.targetPos.getZ()) / 16 / searchArea.rowGap.get();
         double totalBlocks = rowCount * (rowDistance + (searchArea.rowGap.get() * 16));
         long totalSeconds = (long)(totalBlocks / speedBPS);
         long hours = totalSeconds / 3600;
@@ -73,11 +76,16 @@ public class Rectangle extends SearchAreaMode
     @Override
     public void onTick()
     {
-        super.onTick();
+        // autosave every 10 minutes in case of crashes
+        if (System.nanoTime() - startTime > 6e11)
+        {
+            startTime = System.nanoTime();
+            super.saveToJson(goingToStart, pd);
+        }
 
         if (goingToStart)
         {
-            if (Math.sqrt(mc.player.getBlockPos().getSquaredDistance(pd.currPos)) < 5)
+            if (Math.sqrt(mc.player.getBlockPos().getSquaredDistance(pd.currPos.getX(), mc.player.getY(), pd.currPos.getZ())) < 5)
             {
                 goingToStart = false;
                 mc.player.setVelocity(0, 0, 0);
@@ -85,7 +93,7 @@ public class Rectangle extends SearchAreaMode
             }
             else
             {
-                pointTowards(pd.currPos);
+                pointTowards(pd.currPos.toCenterPos(), mc);
                 setPressed(mc.options.forwardKey, true);
             }
             return;

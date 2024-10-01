@@ -1,5 +1,6 @@
 package com.example.addon.modules.searcharea;
 
+import com.example.addon.modules.GotoPosition;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import meteordevelopment.meteorclient.MeteorClient;
@@ -14,9 +15,11 @@ import net.minecraft.util.math.BlockPos;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownServiceException;
 
-import static meteordevelopment.meteorclient.utils.player.ChatUtils.info;
+import static com.example.addon.Utils.sendWebhook;
 
 public class SearchAreaMode
 {
@@ -26,6 +29,7 @@ public class SearchAreaMode
     protected final SearchArea searchArea;
     protected final MinecraftClient mc;
     private final SearchAreaModes type;
+    protected long paused = 0;
 
     public SearchAreaMode(SearchAreaModes type) {
         this.searchArea = Modules.get().get(SearchArea.class);
@@ -55,79 +59,60 @@ public class SearchAreaMode
         Input.setKeyState(key, pressed);
     }
 
-    // thanks chatgpt
-    protected void pointTowards(BlockPos pos)
-    {
-        double deltaX = pos.getX() - mc.player.getX();
-        double deltaZ = pos.getZ() - mc.player.getZ();
-
-        double angle = Math.atan2(deltaZ, deltaX);
-
-        float yaw = (float)Math.toDegrees(angle) - 90.0f;
-
-        yaw = yaw % 360.0f;
-        if (yaw < 0) {
-            yaw += 360.0f;
-        }
-
-        mc.player.setYaw(yaw);
-    }
-
     public void onMessageReceive(ReceiveMessageEvent event)
     {
-        if (searchArea.logToWebhook.get())
+        Text message = event.getMessage();
+        if (message.getString().contains("joined the game"))
         {
-            Text message = event.getMessage();
-            sendWebhook(searchArea.webhookLink.get(), "Chat Message", message.getString());
+            // why is it a double???
+            paused = (long) (System.nanoTime() + 1e10);
+        }
+        if (searchArea.webhookMode.get() != SearchArea.WebhookSettings.Off)
+        {
+            String title;
+            boolean ping = false;
+            if (searchArea.pingForStashFinder.get() &&
+                (message.getString().contains("Possible build") || message.getString().contains("Stash Finder")))
+            {
+                if (!(searchArea.webhookMode.get() == SearchArea.WebhookSettings.LogBoth || searchArea.webhookMode.get() == SearchArea.WebhookSettings.LogStashes)) return;
+                title = "Something Found!";
+                ping = true;
+            }
+            else
+            {
+                if (!(searchArea.webhookMode.get() == SearchArea.WebhookSettings.LogBoth || searchArea.webhookMode.get() == SearchArea.WebhookSettings.LogChat)) return;
+                title = "Chat Message";
+            }
+            sendWebhook(searchArea.webhookLink.get(), title, message.getString(), searchArea.discordId.get(), mc.player.getGameProfile().getName());
         }
 
-    }
-
-    protected void sendWebhook(String webhookURL, String title, String message)
-    {
-        String json = "";
-        json += "{\"embeds\": [{"
-            + "\"title\": \""+ title +"\","
-            + "\"description\": \""+ message +"\","
-            + "\"color\": 15258703"
-            + "}]}";
-        try {
-            URL url = new URL(webhookURL);
-            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-            con.addRequestProperty("Content-Type", "application/json");
-            con.addRequestProperty("User-Agent", "Mozilla");
-            con.setDoOutput(true);
-            con.setRequestMethod("POST");
-            OutputStream stream = con.getOutputStream();
-            stream.write(json.getBytes());
-            stream.flush();
-            stream.close();
-            con.getInputStream().close();
-            con.disconnect();
-        } catch (Exception e) {
-            searchArea.logToWebhook.set(false);
-            searchArea.webhookLink.set("");
-            info("Issue with webhook link. It has been cleared, try again.");
-        }
     }
 
     protected File getJsonFile(String fileName) {
-        return new File(new File(new File(MeteorClient.FOLDER, "search-area"), Utils.getFileWorldName()), fileName + ".json");
+        try
+        {
+            return new File(new File(new File(MeteorClient.FOLDER, "search-area"), searchArea.saveLocation.get()), fileName + ".json");
+        }
+        catch (NullPointerException e)
+        {
+            return null;
+        }
     }
 
     protected void saveToJson(boolean goingToStart, PathingData pd)
     {
-        // last pos doesn't matter if disconnecting while going to start
-        if (!goingToStart) pd.currPos = mc.player.getBlockPos();
-        try {
-            File file = getJsonFile(type.toString());
-            file.getParentFile().mkdirs();
-            Writer writer = new FileWriter(file);
-            GSON.toJson(pd, writer);
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            // last pos doesn't matter if disconnecting while going to start
+            if (!goingToStart) pd.currPos = mc.player.getBlockPos();
+            try {
+                File file = getJsonFile(type.toString());
+                if (file == null) return;
+                file.getParentFile().mkdirs();
+                Writer writer = new FileWriter(file);
+                GSON.toJson(pd, writer);
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
     }
 
     protected static class PathingData
