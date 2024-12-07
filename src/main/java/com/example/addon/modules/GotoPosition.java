@@ -16,7 +16,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-import static com.example.addon.Utils.pointTowards;
+import static com.example.addon.Utils.posToYaw;
 
 
 public class GotoPosition extends Module
@@ -80,7 +80,7 @@ public class GotoPosition extends Module
     {
         if (Math.sqrt(mc.player.getBlockPos().getSquaredDistance(target.get().getX(), mc.player.getY(), target.get().getZ())) > 5)
         {
-            pointTowards(new Vec3d(target.get().getX(), (int) mc.player.getY(), target.get().getZ()), mc);
+            mc.player.setYaw(posToYaw(new Vec3d(target.get().getX(), (int) mc.player.getY(), target.get().getZ()), mc));
             mc.options.forwardKey.setPressed(true);
             Input.setKeyState(mc.options.forwardKey, true);
         }

@@ -12,7 +12,7 @@ import net.minecraft.util.math.BlockPos;
 
 import java.io.*;
 
-import static com.example.addon.Utils.pointTowards;
+import static com.example.addon.Utils.posToYaw;
 import static meteordevelopment.meteorclient.utils.player.ChatUtils.info;
 
 public class Rectangle extends SearchAreaMode
@@ -93,7 +93,7 @@ public class Rectangle extends SearchAreaMode
             }
             else
             {
-                pointTowards(pd.currPos.toCenterPos(), mc);
+                mc.player.setYaw(posToYaw(pd.currPos.toCenterPos(), mc));
                 setPressed(mc.options.forwardKey, true);
             }
             return;

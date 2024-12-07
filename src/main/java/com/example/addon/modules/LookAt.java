@@ -18,7 +18,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-import static com.example.addon.Utils.pointTowards;
+import static com.example.addon.Utils.posToYaw;
 
 public class LookAt extends Module
 {
@@ -62,6 +62,6 @@ public class LookAt extends Module
                 }
             }
         }
-        if (pos != null) pointTowards(pos, mc);
+        if (pos != null) mc.player.setYaw(posToYaw(pos, mc));
     }
 }

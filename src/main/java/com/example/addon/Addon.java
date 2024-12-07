@@ -32,6 +32,8 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new LookAt());
         Modules.get().add(new HighlightOldLava());
         Modules.get().add(new FollowBaritonePath());
+        Modules.get().add(new TrailFollower());
+        Modules.get().add(new AFKBoostFly());
 
 
         // Commands

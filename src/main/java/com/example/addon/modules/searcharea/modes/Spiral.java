@@ -6,7 +6,7 @@ import net.minecraft.util.math.BlockPos;
 
 import java.io.*;
 
-import static com.example.addon.Utils.pointTowards;
+import static com.example.addon.Utils.posToYaw;
 
 public class Spiral extends SearchAreaMode
 {
@@ -77,7 +77,7 @@ public class Spiral extends SearchAreaMode
             }
             else
             {
-                pointTowards(pd.currPos.toCenterPos(), mc);
+                mc.player.setYaw(posToYaw(pd.currPos.toCenterPos(), mc));
                 setPressed(mc.options.forwardKey, true);
             }
             return;

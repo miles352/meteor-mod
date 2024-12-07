@@ -1,6 +1,8 @@
 package com.example.addon;
 
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -12,7 +14,7 @@ import java.net.UnknownServiceException;
 
 public class Utils
 {
-    public static void pointTowards(Vec3d pos, MinecraftClient mc) {
+    public static float posToYaw(Vec3d pos, MinecraftClient mc) {
         double deltaX = pos.getX() - mc.player.getX();
         double deltaZ = pos.getZ() - mc.player.getZ();
 
@@ -25,7 +27,7 @@ public class Utils
             yaw += 360.0f;
         }
 
-        mc.player.setYaw(yaw);
+        return yaw;
     }
 
     public static void sendWebhook(String webhookURL, String title, String message, String pingID, String playerName)
