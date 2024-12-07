@@ -30,10 +30,7 @@ import net.minecraft.world.Heightmap;
 import net.minecraft.world.chunk.Chunk;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 
 import static com.example.addon.Utils.sendWebhook;
 
@@ -74,6 +71,30 @@ public class HighlightOldLava extends Module
         .name("Log Mode")
         .description("How results are shown.")
         .defaultValue(Mode.Highlight)
+        .build()
+    );
+
+    public final Setting<String> webhookLink = sgGeneral.add(new StringSetting.Builder()
+        .name("Webhook Link")
+        .description("A discord webhook link. Looks like this: https://discord.com/api/webhooks/webhookUserId/webHookTokenOrSomething")
+        .defaultValue("")
+        .visible(() -> logMode.get() == Mode.LogWebhook || logMode.get() == Mode.Both)
+        .build()
+    );
+
+    public final Setting<Boolean> ping = sgGeneral.add(new BoolSetting.Builder()
+        .name("Ping on Lava Found")
+        .description("Pings you when lava that matches your search is found.")
+        .defaultValue(false)
+        .visible(() -> logMode.get() == Mode.LogWebhook || logMode.get() == Mode.Both)
+        .build()
+    );
+
+    public final Setting<String> discordId = sgGeneral.add(new StringSetting.Builder()
+        .name("Discord ID")
+        .description("Your discord ID")
+        .defaultValue("")
+        .visible(() -> logMode.get() == Mode.LogWebhook || logMode.get() == Mode.Both)
         .build()
     );
 
@@ -200,7 +221,6 @@ public class HighlightOldLava extends Module
             {
                 int height = chunk.getHeightmap(Heightmap.Type.WORLD_SURFACE).get(x - chunk.getPos().getStartX(), z - chunk.getPos().getStartZ());
 
-//                for (int y = searchAbove.get() + 1; y < height; y++)
                 for (int y = height; y > searchAbove.get(); y--)
                 {
                     BlockPos blockPos = new BlockPos(x, y, z);
@@ -224,9 +244,9 @@ public class HighlightOldLava extends Module
                         }
                         if (heightFound)
                         {
-                            if (logMode.get() == Mode.LogWebhook || logMode.get() == Mode.Both)
+                            if ((logMode.get() == Mode.LogWebhook || logMode.get() == Mode.Both) && !webhookLink.get().isEmpty())
                             {
-                                sendWebhook("https://discord.com/api/webhooks/1231507654841729034/KGDjnmYt9pGepy1o7NPuSiEQ0v8Qj6WIalJQJSsPRGANlyuL0WcJO4adrkfeFSaRCDMw", "Old Chunk Found", "At: " + blockPos.getX() + " " + blockPos.getZ(), "769415977439592468", mc.player.getGameProfile().getName());
+                                sendWebhook(webhookLink.get(), "Old Chunk Found", "At: " + blockPos.getX() + " " + blockPos.getZ(), (ping.get() ? discordId.get() : null), mc.player.getGameProfile().getName());
                             }
                             if (disconnectOnFound.get()) mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[HighlightOldLava] Old lava was found.")));
                             oldLava.add(blockPos);
@@ -238,7 +258,6 @@ public class HighlightOldLava extends Module
                 }
             }
         }
-//        oldLava.addAll(toAdd);
     }
 
 
