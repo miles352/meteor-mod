@@ -8,6 +8,7 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.text.Text;
 
+
 public class AFKBoostFly extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

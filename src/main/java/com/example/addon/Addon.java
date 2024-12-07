@@ -11,6 +11,7 @@ import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import org.slf4j.Logger;
+import net.fabricmc.loader.api.FabricLoader;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
@@ -32,8 +33,16 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new LookAt());
         Modules.get().add(new HighlightOldLava());
         Modules.get().add(new FollowBaritonePath());
-        Modules.get().add(new TrailFollower());
         Modules.get().add(new AFKBoostFly());
+
+        if (FabricLoader.getInstance().isModLoaded("xaeroplus"))
+        {
+            Modules.get().add(new TrailFollower());
+        }
+        else
+        {
+            LOG.info("XaeroPlus not found, disabling TrailFollower");
+        }
 
 
         // Commands
