@@ -9,6 +9,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
+import net.minecraft.client.network.CookieStorage;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
 
@@ -42,10 +43,8 @@ public class AutoJoinServer extends Module
         if (!joined && System.nanoTime() - startTime > 1e10)
         {
             joined = true;
-            ConnectScreen.connect(new TitleScreen(), mc, ServerAddress.parse(address.get()), new ServerInfo("Minecraft Server", address.get(), ServerInfo.ServerType.OTHER), false);
+            ConnectScreen.connect(new TitleScreen(), mc, ServerAddress.parse(address.get()), new ServerInfo("Minecraft Server", address.get(), ServerInfo.ServerType.OTHER), false, null);
         }
-
-
     }
 
 
