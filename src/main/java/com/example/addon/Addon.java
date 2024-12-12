@@ -34,14 +34,17 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new HighlightOldLava());
         Modules.get().add(new FollowBaritonePath());
         Modules.get().add(new AFKBoostFly());
+//        Modules.get().add(new ChatCoordSpammer());
+        Modules.get().add(new Pitch40Util());
 
         if (FabricLoader.getInstance().isModLoaded("xaeroplus"))
         {
             Modules.get().add(new TrailFollower());
+//            Modules.get().add(new OldChunkNotifier());
         }
         else
         {
-            LOG.info("XaeroPlus not found, disabling TrailFollower");
+            LOG.info("XaeroPlus not found, disabling TrailFollower and OldChunkNotifier");
         }
 
 

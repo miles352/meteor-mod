@@ -28,19 +28,10 @@ repositories {
         name = "Meteor Dev Snapshots"
         url = "https://maven.meteordev.org/snapshots"
     }
-}
 
-def urlFile = { url, name, version ->
-    File file = new File("$rootDir/lib/${name}-${version}.jar")
-    file.parentFile.mkdirs()
-    if (!file.exists()) {
-        new URL(url).withInputStream { downloadStream ->
-            file.withOutputStream { fileOut ->
-                fileOut << downloadStream
-            }
-        }
+    flatDir {
+        dirs 'libs'
     }
-    return [name: name, version: version]
 }
 
 dependencies {
@@ -56,6 +47,8 @@ dependencies {
     // lenni
     modImplementation("net.lenni0451:LambdaEvents:2.4.2")
     modImplementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+
+    modImplementation "baritone-api-fabric:baritone-api-fabric:1.10.2"
 }
 
 processResources {
