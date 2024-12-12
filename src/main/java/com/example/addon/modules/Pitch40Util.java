@@ -68,7 +68,7 @@ public class Pitch40Util extends Module {
             Setting<Double> upperBounds = (Setting<Double>) module.settings.get("pitch40-upper-bounds");
             upperBounds.set(mc.player.getY() - 5);
             Setting<Double> lowerBounds = (Setting<Double>) module.settings.get("pitch40-lower-bounds");
-            lowerBounds.set(mc.player.getY() - 65);
+            lowerBounds.set(mc.player.getY() - 5 - boundGap.get());
         }
     }
 
