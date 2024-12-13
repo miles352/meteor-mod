@@ -6,6 +6,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFly;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 
 
@@ -41,11 +42,25 @@ public class Pitch40Util extends Module {
     Class<? extends Module> elytraFly = ElytraFly.class;
     Module module = Modules.get().get(elytraFly);
 
+    private void resetBounds()
+    {
+        Setting<Double> upperBounds = (Setting<Double>) module.settings.get("pitch40-upper-bounds");
+        upperBounds.set(mc.player.getY() - 5);
+        Setting<Double> lowerBounds = (Setting<Double>) module.settings.get("pitch40-lower-bounds");
+        lowerBounds.set(mc.player.getY() - 5 - boundGap.get());
+    }
+
     @EventHandler
     private void onTick(TickEvent.Pre event)
     {
         if (module.isActive())
         {
+            if (mc.player.getY() < (double)module.settings.get("pitch40-lower-bounds").get() - 10)
+            {
+//                ChatUtils.info("Pitch40Util: You are below the lower bounds, resetting bounds.");
+                resetBounds();
+                return;
+            }
             if (mc.player.getPitch() == -40)
             {
                 goingUp = true;
@@ -53,11 +68,10 @@ public class Pitch40Util extends Module {
             // waits until your at the highest point, when y velocity is 0, then sets min and max bounds based on your position
             else if (goingUp && mc.player.getVelocity().y <= 0) {
                 goingUp = false;
-                Setting<Double> upperBounds = (Setting<Double>) module.settings.get("pitch40-upper-bounds");
-                upperBounds.set(mc.player.getY() - 5);
-                Setting<Double> lowerBounds = (Setting<Double>) module.settings.get("pitch40-lower-bounds");
-                lowerBounds.set(mc.player.getY() - 5 - boundGap.get());
+                resetBounds();
+//                ChatUtils.info("Y: " + mc.player.getY());
             }
+//            ChatUtils.info("Pitch: " + mc.player.getPitch() + " Speed Y: " + mc.player.getVelocity().y);
             return;
         }
 
@@ -65,10 +79,7 @@ public class Pitch40Util extends Module {
         if (!mc.player.getAbilities().allowFlying)
         {
             module.toggle();
-            Setting<Double> upperBounds = (Setting<Double>) module.settings.get("pitch40-upper-bounds");
-            upperBounds.set(mc.player.getY() - 5);
-            Setting<Double> lowerBounds = (Setting<Double>) module.settings.get("pitch40-lower-bounds");
-            lowerBounds.set(mc.player.getY() - 5 - boundGap.get());
+            resetBounds();
         }
     }
 
