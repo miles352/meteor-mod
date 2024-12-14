@@ -43,7 +43,8 @@ dependencies {
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
     // XaeroPlus
-    modImplementation("maven.modrinth:xaeroplus:2.24.6+fabric-1.20.4")
+//    modImplementation("maven.modrinth:xaeroplus:2.24.6+fabric-1.20.4")
+    modImplementation("maven.modrinth:xaeroplus:2.24.7+fabric-1.21")
     // lenni
     modImplementation("net.lenni0451:LambdaEvents:2.4.2")
     modImplementation("com.github.ben-manes.caffeine:caffeine:3.1.8")

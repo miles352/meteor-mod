@@ -42,7 +42,8 @@ public class AutoJoinServer extends Module
         if (!joined && System.nanoTime() - startTime > 1e10)
         {
             joined = true;
-            ConnectScreen.connect(new TitleScreen(), mc, ServerAddress.parse(address.get()), new ServerInfo("Minecraft Server", address.get(), ServerInfo.ServerType.OTHER), false);
+            ConnectScreen.connect(new TitleScreen(), mc, ServerAddress.parse(address.get()), new ServerInfo("Minecraft Server", address.get(), ServerInfo.ServerType.OTHER), false, null);
+//            ConnectScreen.connect(new TitleScreen(), mc, ServerAddress.parse(address.get()), new ServerInfo("Minecraft Server", address.get(), ServerInfo.ServerType.OTHER), false);
         }
 
 
