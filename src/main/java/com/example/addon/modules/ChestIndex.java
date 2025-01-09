@@ -47,6 +47,18 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 import java.util.*;
+import com.google.gson.JsonObject; // For JsonObject
+import java.io.IOException;        // For handling IOExceptions
+import java.nio.file.Files;        // For file operations
+import java.nio.file.Path;         // For the Path class
+import java.nio.file.Paths;        // For constructing file paths
+import java.nio.file.StandardOpenOption; // For specifying file write options
+import com.google.gson.*;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
+import net.minecraft.text.Text;
+
 
 import static meteordevelopment.meteorclient.utils.Utils.getItemsInContainerItem;
 import static meteordevelopment.meteorclient.utils.Utils.hasItems;
@@ -131,8 +143,14 @@ public class ChestIndex extends Module
     public WWidget getWidget(GuiTheme theme)
     {
         WVerticalList list = theme.verticalList();
-        WButton showBlocks = list.add(theme.button("Display the blocks logged")).widget();
 
+        // Create a Gson instance for pretty printing without escaping characters
+        Gson gson = new GsonBuilder()
+            .setPrettyPrinting()
+            .disableHtmlEscaping() // This prevents escaping characters like `'`
+            .create();
+
+        WButton showBlocks = list.add(theme.button("Display the blocks logged")).widget();
         showBlocks.action = () -> {
             info("showing blocks");
             ArrayList<Map.Entry<String, Integer>> blockList = new ArrayList<>(blocks.entrySet());
@@ -151,17 +169,178 @@ public class ChestIndex extends Module
         };
 
         WButton clearBlocks = list.add(theme.button("Clear Blocks")).widget();
-
         clearBlocks.action = () -> {
-            searched = new HashSet<BlockPos>();
-            blocks = new HashMap<String, Integer>();
+            searched = new HashSet<>();
+            blocks = new HashMap<>();
         };
 
+        // New Button: Export (ID)
+        WButton exportByID = list.add(theme.button("Export (ID)")).widget();
+        exportByID.action = () -> {
+            try {
+                Path folderPath = Paths.get("ChestIndex");
+                if (!Files.exists(folderPath)) {
+                    Files.createDirectories(folderPath);
+                }
 
+                Path filePath = folderPath.resolve("blocks_id.json");
 
+                // Sort blocks by value (count) in descending order
+                List<Map.Entry<String, Integer>> sortedBlocks = blocks.entrySet().stream()
+                    .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                    .toList();
+
+                JsonObject json = new JsonObject();
+                for (Map.Entry<String, Integer> entry : sortedBlocks) {
+                    json.add(entry.getKey(), new JsonPrimitive(entry.getValue()));
+                }
+
+                // Write the pretty-printed JSON
+                Files.writeString(filePath, gson.toJson(json), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                info("Exported blocks to ChestIndex/blocks_id.json using IDs (sorted, pretty-printed).");
+            } catch (IOException e) {
+                error("Failed to export blocks (ID): " + e.getMessage());
+            }
+        };
+
+        // New Button: Export (Name)
+        WButton exportByName = list.add(theme.button("Export (Name)")).widget();
+        exportByName.action = () -> {
+            try {
+                Path folderPath = Paths.get("ChestIndex");
+                if (!Files.exists(folderPath)) {
+                    Files.createDirectories(folderPath);
+                }
+
+                Path filePath = folderPath.resolve("blocks_name.json");
+
+                // Sort blocks by value (count) in descending order
+                List<Map.Entry<String, Integer>> sortedBlocks = blocks.entrySet().stream()
+                    .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                    .toList();
+
+                JsonObject json = new JsonObject();
+                for (Map.Entry<String, Integer> entry : sortedBlocks) {
+                    try {
+                        // Convert key to Identifier
+                        Identifier identifier = Identifier.tryParse(entry.getKey());
+
+                        // Get the item from the registry
+                        Item item = Registries.ITEM.get(identifier);
+
+                        // Get the display name (human-readable)
+                        String displayName = item != null ? item.getName().getString() : entry.getKey();
+                        json.add(displayName, new JsonPrimitive(entry.getValue()));
+                    } catch (Exception e) {
+                        // Handle invalid identifiers gracefully
+                        json.add(entry.getKey(), new JsonPrimitive(entry.getValue()));
+                    }
+                }
+
+                // Write the pretty-printed JSON
+                Files.writeString(filePath, gson.toJson(json), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                info("Exported blocks to ChestIndex/blocks_name.json using human-readable names (sorted, pretty-printed).");
+            } catch (IOException e) {
+                error("Failed to export blocks (Name): " + e.getMessage());
+            }
+        };
+
+        WButton exportDubs = list.add(theme.button("Export (Dubs)")).widget();
+        exportDubs.action = () -> {
+            try {
+                Path folderPath = Paths.get("ChestIndex");
+                if (!Files.exists(folderPath)) {
+                    Files.createDirectories(folderPath);
+                }
+
+                Path filePath = folderPath.resolve("blocks_dubs.json");
+
+                // Sort blocks by value (count) in descending order
+                List<Map.Entry<String, Integer>> sortedBlocks = blocks.entrySet().stream()
+                    .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                    .toList();
+
+                JsonObject json = new JsonObject();
+                for (Map.Entry<String, Integer> entry : sortedBlocks) {
+                    try {
+                        // Convert key to Identifier
+                        Identifier identifier = Identifier.tryParse(entry.getKey());
+
+                        // Get the item from the registry
+                        Item item = Registries.ITEM.get(identifier);
+
+                        // Get the display name (human-readable)
+                        String displayName = item != null ? item.getName().getString() : entry.getKey();
+
+                        // Calculate stack size
+                        int stackSize = item != null ? item.getMaxCount() : 64;
+
+                        // Correct calculation for Dubs (shulkers full of items in dubs)
+                        double dubs = entry.getValue() / (stackSize * 27.0 * 54.0); // 1458 slots per double chest
+                        json.add(displayName, new JsonPrimitive(String.format("%.2f", dubs)));
+                    } catch (Exception e) {
+                        json.add(entry.getKey(), new JsonPrimitive("0.00"));
+                    }
+                }
+
+                // Write the pretty-printed JSON
+                Files.writeString(filePath, gson.toJson(json), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                info("Exported blocks to ChestIndex/blocks_dubs.json (calculated as dubs with shulkers).");
+            } catch (IOException e) {
+                error("Failed to export blocks (Dubs): " + e.getMessage());
+            }
+        };
+
+        WButton exportShulkers = list.add(theme.button("Export (Shulkers)")).widget();
+        exportShulkers.action = () -> {
+            try {
+                Path folderPath = Paths.get("ChestIndex");
+                if (!Files.exists(folderPath)) {
+                    Files.createDirectories(folderPath);
+                }
+
+                Path filePath = folderPath.resolve("blocks_shulkers.json");
+
+                // Sort blocks by value (count) in descending order
+                List<Map.Entry<String, Integer>> sortedBlocks = blocks.entrySet().stream()
+                    .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                    .toList();
+
+                JsonObject json = new JsonObject();
+                for (Map.Entry<String, Integer> entry : sortedBlocks) {
+                    try {
+                        // Convert key to Identifier
+                        Identifier identifier = Identifier.tryParse(entry.getKey());
+
+                        // Get the item from the registry
+                        Item item = Registries.ITEM.get(identifier);
+
+                        // Get the display name (human-readable)
+                        String displayName = item != null ? item.getName().getString() : entry.getKey();
+
+                        // Calculate stack size
+                        int stackSize = item != null ? item.getMaxCount() : 64;
+
+                        // Correct calculation for Shulkers
+                        double shulkers = entry.getValue() / (stackSize * 27.0); // 27 slots per shulker
+                        json.add(displayName, new JsonPrimitive(String.format("%.2f", shulkers)));
+                    } catch (Exception e) {
+                        json.add(entry.getKey(), new JsonPrimitive("0.00"));
+                    }
+                }
+
+                // Write the pretty-printed JSON
+                Files.writeString(filePath, gson.toJson(json), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                info("Exported blocks to ChestIndex/blocks_shulkers.json (calculated as shulkers, by name).");
+            } catch (IOException e) {
+                error("Failed to export blocks (Shulkers): " + e.getMessage());
+            }
+        };
 
         return list;
     }
+
+
 
     @EventHandler
     private void onRender(Render3DEvent event) {
@@ -204,41 +383,41 @@ public class ChestIndex extends Module
 
 
         BlockIterator.register(searchRange.get(), searchRange.get(), (blockPos, blockState) ->
+        {
+            // might be too many packets from not checking if menu already open
+            if (!awaiting &&
+                !searched.contains(blockPos.toImmutable()) &&
+                (blockState.getBlock() == Blocks.CHEST ||
+                    blockState.getBlock() == Blocks.BARREL ||
+                    blockState.getBlock() instanceof ShulkerBoxBlock))
             {
-                // might be too many packets from not checking if menu already open
-                if (!awaiting &&
-                    !searched.contains(blockPos.toImmutable()) &&
-                    (blockState.getBlock() == Blocks.CHEST ||
-                        blockState.getBlock() == Blocks.BARREL ||
-                        blockState.getBlock() instanceof ShulkerBoxBlock))
+
+
+
+
+                Vec3d vec = new Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+                BlockHitResult hitResult = new BlockHitResult(vec, Direction.UP, blockPos, false);
+                if (mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hitResult) == ActionResult.SUCCESS)
                 {
-
-
-
-
-                    Vec3d vec = new Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-                    BlockHitResult hitResult = new BlockHitResult(vec, Direction.UP, blockPos, false);
-                    if (mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hitResult) == ActionResult.SUCCESS)
+                    awaiting = true;
+                    mc.player.swingHand(Hand.MAIN_HAND);
+                    // find way to see when the interaction fails
+                    info("interacted");
+                    currPos[0] = blockPos.toImmutable();
+                    if (blockState.getBlock() == Blocks.CHEST)
                     {
-                        awaiting = true;
-                        mc.player.swingHand(Hand.MAIN_HAND);
-                        // find way to see when the interaction fails
-                        info("interacted");
-                        currPos[0] = blockPos.toImmutable();
-                        if (blockState.getBlock() == Blocks.CHEST)
+                        ChestType chestType = blockState.get(ChestBlock.CHEST_TYPE);
+                        if (chestType == ChestType.LEFT || chestType == ChestType.RIGHT)
                         {
-                            ChestType chestType = blockState.get(ChestBlock.CHEST_TYPE);
-                            if (chestType == ChestType.LEFT || chestType == ChestType.RIGHT)
-                            {
-                                Direction facing = blockState.get(ChestBlock.FACING);
-                                BlockPos otherPartPos = blockPos.offset(chestType == ChestType.LEFT ? facing.rotateYClockwise() : facing.rotateYCounterclockwise());
+                            Direction facing = blockState.get(ChestBlock.FACING);
+                            BlockPos otherPartPos = blockPos.offset(chestType == ChestType.LEFT ? facing.rotateYClockwise() : facing.rotateYCounterclockwise());
 
-                                currPos[1] = otherPartPos;
-                            }
+                            currPos[1] = otherPartPos;
                         }
                     }
                 }
-            });
+            }
+        });
     }
     @EventHandler
     private void onInventory(InventoryEvent event) {
