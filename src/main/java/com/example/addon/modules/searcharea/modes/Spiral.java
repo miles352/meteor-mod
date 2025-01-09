@@ -2,6 +2,7 @@ package com.example.addon.modules.searcharea.modes;
 
 import com.example.addon.modules.searcharea.SearchAreaMode;
 import com.example.addon.modules.searcharea.SearchAreaModes;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import net.minecraft.util.math.BlockPos;
 
 import java.io.*;
@@ -77,7 +78,7 @@ public class Spiral extends SearchAreaMode
             }
             else
             {
-                mc.player.setYaw(posToYaw(pd.currPos.toCenterPos(), mc));
+                mc.player.setYaw((float) Rotations.getYaw(pd.currPos.toCenterPos()));
                 setPressed(mc.options.forwardKey, true);
             }
             return;

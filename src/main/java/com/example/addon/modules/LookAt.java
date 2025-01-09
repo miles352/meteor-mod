@@ -9,6 +9,7 @@ import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.misc.input.Input;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -17,8 +18,6 @@ import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-
-import static com.example.addon.Utils.posToYaw;
 
 public class LookAt extends Module
 {
@@ -62,6 +61,6 @@ public class LookAt extends Module
                 }
             }
         }
-        if (pos != null) mc.player.setYaw(posToYaw(pos, mc));
+        if (pos != null) mc.player.setYaw((float) Rotations.getYaw(pos));
     }
 }

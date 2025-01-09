@@ -6,6 +6,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.misc.AutoReconnect;
 import meteordevelopment.meteorclient.systems.modules.movement.BoatFly;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
@@ -93,7 +94,7 @@ public class Rectangle extends SearchAreaMode
             }
             else
             {
-                mc.player.setYaw(posToYaw(pd.currPos.toCenterPos(), mc));
+                mc.player.setYaw((float) Rotations.getYaw(pd.currPos.toCenterPos()));
                 setPressed(mc.options.forwardKey, true);
             }
             return;

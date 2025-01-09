@@ -9,14 +9,13 @@ import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.misc.input.Input;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-
-import static com.example.addon.Utils.posToYaw;
 
 
 public class GotoPosition extends Module
@@ -80,7 +79,7 @@ public class GotoPosition extends Module
     {
         if (Math.sqrt(mc.player.getBlockPos().getSquaredDistance(target.get().getX(), mc.player.getY(), target.get().getZ())) > 5)
         {
-            mc.player.setYaw(posToYaw(new Vec3d(target.get().getX(), (int) mc.player.getY(), target.get().getZ()), mc));
+            mc.player.setYaw((float) Rotations.getYaw(new Vec3d(target.get().getX(), (int) mc.player.getY(), target.get().getZ())));
             mc.options.forwardKey.setPressed(true);
             Input.setKeyState(mc.options.forwardKey, true);
         }

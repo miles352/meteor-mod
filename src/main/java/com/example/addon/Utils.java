@@ -1,8 +1,9 @@
 package com.example.addon;
 
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import meteordevelopment.meteorclient.utils.misc.input.Input;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -11,24 +12,27 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownServiceException;
+import java.util.ArrayDeque;
 
 public class Utils
 {
-    public static float posToYaw(Vec3d pos, MinecraftClient mc) {
-        double deltaX = pos.getX() - mc.player.getX();
-        double deltaZ = pos.getZ() - mc.player.getZ();
 
-        double angle = Math.atan2(deltaZ, deltaX);
-
-        float yaw = (float)Math.toDegrees(angle) - 90.0f;
-
-        yaw = yaw % 360.0f;
-        if (yaw < 0) {
-            yaw += 360.0f;
-        }
-
-        return yaw;
+    public static void setPressed(KeyBinding key, boolean pressed)
+    {
+        key.setPressed(pressed);
+        Input.setKeyState(key, pressed);
     }
+
+    public static int emptyInvSlots(MinecraftClient mc) {
+        int airCount = 0;
+        for (int i = 0; i < 36; i++) {
+            if (mc.player.getInventory().getStack(i).getItem() == Items.AIR) {
+                airCount++;
+            }
+        }
+        return airCount;
+    }
+
 
     public static void sendWebhook(String webhookURL, String title, String message, String pingID, String playerName)
     {
@@ -46,6 +50,17 @@ public class Utils
         {
             json = "{\"content\": \"<@" + pingID + ">\"}";
             sendRequest(webhookURL, json);
+        }
+    }
+
+    public static void sendWebhook(String webhookURL, String jsonObject, String pingID)
+    {
+        sendRequest(webhookURL, jsonObject);
+
+        if (pingID != null)
+        {
+            jsonObject = "{\"content\": \"<@" + pingID + ">\"}";
+            sendRequest(webhookURL, jsonObject);
         }
     }
 
