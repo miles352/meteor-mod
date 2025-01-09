@@ -2,7 +2,6 @@ plugins {
     id "fabric-loom" version "1.8-SNAPSHOT"
 }
 
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -32,6 +31,10 @@ repositories {
     flatDir {
         dirs 'libs'
     }
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/jeffmod.accesswidener")
 }
 
 dependencies {

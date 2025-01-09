@@ -11,6 +11,7 @@
     "sources": "https://discord.com/users/769415977439592468"
   },
   "icon": "assets/template/icon.png",
+  "accessWidener": "jeffmod.accesswidener",
   "environment": "client",
   "entrypoints": {
     "meteor": [
