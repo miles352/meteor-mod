@@ -12,8 +12,8 @@ import net.minecraft.util.math.BlockPos;
 
 import java.io.*;
 
-import static com.example.addon.Utils.posToYaw;
 import static meteordevelopment.meteorclient.utils.player.ChatUtils.info;
+import static com.example.addon.Utils.*;
 
 public class Rectangle extends SearchAreaMode
 {

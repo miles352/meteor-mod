@@ -6,7 +6,7 @@ import net.minecraft.util.math.BlockPos;
 
 import java.io.*;
 
-import static com.example.addon.Utils.posToYaw;
+import static com.example.addon.Utils.*;
 
 public class Spiral extends SearchAreaMode
 {

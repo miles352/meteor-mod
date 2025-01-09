@@ -1,23 +1,16 @@
 package com.example.addon.modules.searcharea;
 
-import com.example.addon.modules.GotoPosition;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.Utils;
-import meteordevelopment.meteorclient.utils.misc.input.Input;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
-
-import javax.net.ssl.HttpsURLConnection;
+import static com.example.addon.Utils.*;
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.UnknownServiceException;
 
 import static com.example.addon.Utils.sendWebhook;
 
@@ -53,11 +46,7 @@ public class SearchAreaMode
     }
 
     // stolen from autowalk
-    protected void setPressed(KeyBinding key, boolean pressed)
-    {
-        key.setPressed(pressed);
-        Input.setKeyState(key, pressed);
-    }
+
 
     public void onMessageReceive(ReceiveMessageEvent event)
     {
