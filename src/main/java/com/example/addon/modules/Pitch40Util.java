@@ -17,13 +17,14 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 
 import static meteordevelopment.meteorclient.utils.Utils.rightClick;
+import static com.example.addon.Utils.firework;
 
 
 public class Pitch40Util extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private final Setting<Double> boundGap = sgGeneral.add(new DoubleSetting.Builder()
+    public final Setting<Double> boundGap = sgGeneral.add(new DoubleSetting.Builder()
         .name("Bound Gap")
         .description("The gap between the upper and lower bounds.")
         .defaultValue(60)
@@ -121,7 +122,7 @@ public class Pitch40Util extends Module {
                 if (autoFirework.get() && mc.player.getVelocity().y < velocityThreshold.get() && mc.player.getY() < (double)elytraFlyModule.settings.get("pitch40-upper-bounds").get())
                 {
                     if (fireworkCooldown == 0) {
-                        int launchStatus = firework();
+                        int launchStatus = firework(mc);
                         if (launchStatus >= 0)
                         {
                             fireworkCooldown = fireworkCooldownTicks.get();
@@ -151,47 +152,6 @@ public class Pitch40Util extends Module {
 
     }
 
-    // returns -1 if fails, 1 if successful, and slot of chestplate if it had to swap (needed for mio grimdura)
-    public int firework() {
 
-        // cant use a rocket if not wearing an elytra
-        int elytraSwapSlot = -1;
-        if (!mc.player.getInventory().getArmorStack(2).isOf(Items.ELYTRA))
-        {
-            FindItemResult itemResult = InvUtils.findInHotbar(Items.ELYTRA);
-            if (!itemResult.found()) {
-                return -1;
-            }
-            else
-            {
-                elytraSwapSlot = itemResult.slot();
-                InvUtils.swap(itemResult.slot(), true);
-                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                InvUtils.swapBack();
-//                mc.player.setJumping(false);
-//                mc.player.setSprinting(true);
-//                mc.player.jump();
-                mc.getNetworkHandler().sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
-            }
-        }
-
-        FindItemResult itemResult = InvUtils.findInHotbar(Items.FIREWORK_ROCKET);
-        if (!itemResult.found()) return -1;
-
-        if (itemResult.isOffhand()) {
-            mc.interactionManager.interactItem(mc.player, Hand.OFF_HAND);
-            mc.player.swingHand(Hand.OFF_HAND);
-        } else {
-            InvUtils.swap(itemResult.slot(), true);
-            mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-            mc.player.swingHand(Hand.MAIN_HAND);
-            InvUtils.swapBack();
-        }
-        if (elytraSwapSlot != -1)
-        {
-            return elytraSwapSlot;
-        }
-        return 200;
-    }
 
 }

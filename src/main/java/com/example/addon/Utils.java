@@ -1,9 +1,13 @@
 package com.example.addon;
 
 import meteordevelopment.meteorclient.utils.misc.input.Input;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -16,6 +20,46 @@ import java.util.ArrayDeque;
 
 public class Utils
 {
+
+    // returns -1 if fails, 200 if successful, and slot of chestplate if it had to swap (needed for mio grimdura)
+    public static int firework(MinecraftClient mc) {
+
+        // cant use a rocket if not wearing an elytra
+        int elytraSwapSlot = -1;
+        if (!mc.player.getInventory().getArmorStack(2).isOf(Items.ELYTRA))
+        {
+            FindItemResult itemResult = InvUtils.findInHotbar(Items.ELYTRA);
+            if (!itemResult.found()) {
+                return -1;
+            }
+            else
+            {
+                elytraSwapSlot = itemResult.slot();
+                InvUtils.swap(itemResult.slot(), true);
+                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                InvUtils.swapBack();
+                mc.getNetworkHandler().sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
+            }
+        }
+
+        FindItemResult itemResult = InvUtils.findInHotbar(Items.FIREWORK_ROCKET);
+        if (!itemResult.found()) return -1;
+
+        if (itemResult.isOffhand()) {
+            mc.interactionManager.interactItem(mc.player, Hand.OFF_HAND);
+            mc.player.swingHand(Hand.OFF_HAND);
+        } else {
+            InvUtils.swap(itemResult.slot(), true);
+            mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+            mc.player.swingHand(Hand.MAIN_HAND);
+            InvUtils.swapBack();
+        }
+        if (elytraSwapSlot != -1)
+        {
+            return elytraSwapSlot;
+        }
+        return 200;
+    }
 
     public static void setPressed(KeyBinding key, boolean pressed)
     {
