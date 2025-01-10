@@ -7,6 +7,8 @@
   - Follows trails in all dimensions using either pitch40 or baritone. May break on path splits or other cases.
 - Pitch40Util
   - Used alongside meteors pitch40. Auto sets min and max bounds so that you continue to gain height. Also has an auto firework mode for when you lose velocity.
+- GrimDuraFirework
+  - A temporary fix for the issue on Mio client where fireworks dont work very well when using grim durability efly with the chestplate on.
 - Search Area
   - Requires some other mod to make you move.
   - Spirals you or goes in a rectangle area by changing where you look.
