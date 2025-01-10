@@ -1,6 +1,7 @@
 package com.example.addon.modules;
 
 import com.example.addon.Addon;
+import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.packets.InventoryEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -46,6 +47,10 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import com.google.gson.JsonObject; // For JsonObject
 import java.io.IOException;        // For handling IOExceptions
@@ -87,7 +92,7 @@ public class ChestIndex extends Module
     );
 
     private final Setting<DisplayType> displayType = sgGeneral.add(new EnumSetting.Builder<DisplayType>()
-        .name("Display Type")
+        .name("Display Type (Only for Chat Output)")
         .description("Unit to use when displaying results.")
         .defaultValue(DisplayType.ItemCount)
         .build()
@@ -139,16 +144,30 @@ public class ChestIndex extends Module
         blocks = new HashMap<String, Integer>();
     }
 
+    private void saveToJson(Gson gson, String fileName, JsonObject json) throws IOException
+    {
+        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
+        File file = new File(new File(MeteorClient.FOLDER, "ChestIndex"), fileName + "-" + timeStamp + ".json");
+        file.getParentFile().mkdirs();
+        Writer writer = new FileWriter(file);
+        gson.toJson(json, writer);
+        writer.close();
+    }
+
+    private List<Map.Entry<String, Integer>> sortBlocks()
+    {
+        // Sort blocks by value (count) in descending order
+        return blocks.entrySet().stream()
+            .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+            .toList();
+    }
+
     @Override
     public WWidget getWidget(GuiTheme theme)
     {
         WVerticalList list = theme.verticalList();
 
-        // Create a Gson instance for pretty printing without escaping characters
-        Gson gson = new GsonBuilder()
-            .setPrettyPrinting()
-            .disableHtmlEscaping() // This prevents escaping characters like `'`
-            .create();
+
 
         WButton showBlocks = list.add(theme.button("Display the blocks logged")).widget();
         showBlocks.action = () -> {
@@ -174,117 +193,81 @@ public class ChestIndex extends Module
             blocks = new HashMap<>();
         };
 
-        // New Button: Export (ID)
+        // Create a Gson instance for pretty printing without escaping characters
+        final Gson gson = new GsonBuilder()
+            .setPrettyPrinting()
+            .disableHtmlEscaping() // This prevents escaping characters like `'`
+            .create();
+
+        // Button: Export (ID)
         WButton exportByID = list.add(theme.button("Export (ID)")).widget();
         exportByID.action = () -> {
             try {
-                Path folderPath = Paths.get("ChestIndex");
-                if (!Files.exists(folderPath)) {
-                    Files.createDirectories(folderPath);
-                }
-
-                Path filePath = folderPath.resolve("blocks_id.json");
-
-                // Sort blocks by value (count) in descending order
-                List<Map.Entry<String, Integer>> sortedBlocks = blocks.entrySet().stream()
-                    .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-                    .toList();
+                List<Map.Entry<String, Integer>> sortedBlocks = sortBlocks();
 
                 JsonObject json = new JsonObject();
                 for (Map.Entry<String, Integer> entry : sortedBlocks) {
                     json.add(entry.getKey(), new JsonPrimitive(entry.getValue()));
                 }
-
-                // Write the pretty-printed JSON
-                Files.writeString(filePath, gson.toJson(json), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                saveToJson(gson, "blocks_id", json);
                 info("Exported blocks to ChestIndex/blocks_id.json using IDs (sorted, pretty-printed).");
             } catch (IOException e) {
                 error("Failed to export blocks (ID): " + e.getMessage());
             }
         };
 
-        // New Button: Export (Name)
+        // Button: Export (Name)
         WButton exportByName = list.add(theme.button("Export (Name)")).widget();
         exportByName.action = () -> {
             try {
-                Path folderPath = Paths.get("ChestIndex");
-                if (!Files.exists(folderPath)) {
-                    Files.createDirectories(folderPath);
-                }
-
-                Path filePath = folderPath.resolve("blocks_name.json");
-
-                // Sort blocks by value (count) in descending order
-                List<Map.Entry<String, Integer>> sortedBlocks = blocks.entrySet().stream()
-                    .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-                    .toList();
+                List<Map.Entry<String, Integer>> sortedBlocks = sortBlocks();
 
                 JsonObject json = new JsonObject();
                 for (Map.Entry<String, Integer> entry : sortedBlocks) {
-                    try {
-                        // Convert key to Identifier
-                        Identifier identifier = Identifier.tryParse(entry.getKey());
+                    // Convert key to Identifier
+                    Identifier identifier = Identifier.tryParse(entry.getKey());
 
-                        // Get the item from the registry
-                        Item item = Registries.ITEM.get(identifier);
+                    // Get the item from the registry
+                    Item item = Registries.ITEM.get(identifier);
 
-                        // Get the display name (human-readable)
-                        String displayName = item != null ? item.getName().getString() : entry.getKey();
-                        json.add(displayName, new JsonPrimitive(entry.getValue()));
-                    } catch (Exception e) {
-                        // Handle invalid identifiers gracefully
-                        json.add(entry.getKey(), new JsonPrimitive(entry.getValue()));
-                    }
+                    // Get the display name (human-readable)
+                    String displayName = item.getName().getString();
+                    json.add(displayName, new JsonPrimitive(entry.getValue()));
                 }
-
-                // Write the pretty-printed JSON
-                Files.writeString(filePath, gson.toJson(json), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                saveToJson(gson, "blocks_name", json);
                 info("Exported blocks to ChestIndex/blocks_name.json using human-readable names (sorted, pretty-printed).");
             } catch (IOException e) {
                 error("Failed to export blocks (Name): " + e.getMessage());
             }
         };
 
+        // Button: Export (Dubs)
         WButton exportDubs = list.add(theme.button("Export (Dubs)")).widget();
         exportDubs.action = () -> {
             try {
-                Path folderPath = Paths.get("ChestIndex");
-                if (!Files.exists(folderPath)) {
-                    Files.createDirectories(folderPath);
-                }
-
-                Path filePath = folderPath.resolve("blocks_dubs.json");
-
-                // Sort blocks by value (count) in descending order
-                List<Map.Entry<String, Integer>> sortedBlocks = blocks.entrySet().stream()
-                    .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-                    .toList();
+                List<Map.Entry<String, Integer>> sortedBlocks = sortBlocks();
 
                 JsonObject json = new JsonObject();
                 for (Map.Entry<String, Integer> entry : sortedBlocks) {
-                    try {
-                        // Convert key to Identifier
-                        Identifier identifier = Identifier.tryParse(entry.getKey());
+                    // Convert key to Identifier
+                    Identifier identifier = Identifier.tryParse(entry.getKey());
 
-                        // Get the item from the registry
-                        Item item = Registries.ITEM.get(identifier);
+                    // Get the item from the registry
+                    Item item = Registries.ITEM.get(identifier);
 
-                        // Get the display name (human-readable)
-                        String displayName = item != null ? item.getName().getString() : entry.getKey();
+                    // Get the display name (human-readable)
+                    String displayName = item.getName().getString();
 
-                        // Calculate stack size
-                        int stackSize = item != null ? item.getMaxCount() : 64;
+                    // Calculate stack size
+                    int stackSize = item.getMaxCount();
 
-                        // Correct calculation for Dubs (shulkers full of items in dubs)
-                        double dubs = entry.getValue() / (stackSize * 27.0 * 54.0); // 1458 slots per double chest
-                        json.add(displayName, new JsonPrimitive(String.format("%.2f", dubs)));
-                    } catch (Exception e) {
-                        json.add(entry.getKey(), new JsonPrimitive("0.00"));
-                    }
+                    // Correct calculation for Dubs (shulkers full of items in dubs)
+                    double dubs = entry.getValue() / (stackSize * 27.0 * 54.0); // 1458 slots per double chest
+                    json.add(displayName, new JsonPrimitive(String.format("%.2f", dubs)));
                 }
 
                 // Write the pretty-printed JSON
-                Files.writeString(filePath, gson.toJson(json), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                saveToJson(gson, "blocks_dubs", json);
                 info("Exported blocks to ChestIndex/blocks_dubs.json (calculated as dubs with shulkers).");
             } catch (IOException e) {
                 error("Failed to export blocks (Dubs): " + e.getMessage());
@@ -294,17 +277,7 @@ public class ChestIndex extends Module
         WButton exportShulkers = list.add(theme.button("Export (Shulkers)")).widget();
         exportShulkers.action = () -> {
             try {
-                Path folderPath = Paths.get("ChestIndex");
-                if (!Files.exists(folderPath)) {
-                    Files.createDirectories(folderPath);
-                }
-
-                Path filePath = folderPath.resolve("blocks_shulkers.json");
-
-                // Sort blocks by value (count) in descending order
-                List<Map.Entry<String, Integer>> sortedBlocks = blocks.entrySet().stream()
-                    .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-                    .toList();
+                List<Map.Entry<String, Integer>> sortedBlocks = sortBlocks();
 
                 JsonObject json = new JsonObject();
                 for (Map.Entry<String, Integer> entry : sortedBlocks) {
@@ -316,10 +289,10 @@ public class ChestIndex extends Module
                         Item item = Registries.ITEM.get(identifier);
 
                         // Get the display name (human-readable)
-                        String displayName = item != null ? item.getName().getString() : entry.getKey();
+                        String displayName =item.getName().getString();
 
                         // Calculate stack size
-                        int stackSize = item != null ? item.getMaxCount() : 64;
+                        int stackSize = item.getMaxCount();
 
                         // Correct calculation for Shulkers
                         double shulkers = entry.getValue() / (stackSize * 27.0); // 27 slots per shulker
@@ -330,7 +303,7 @@ public class ChestIndex extends Module
                 }
 
                 // Write the pretty-printed JSON
-                Files.writeString(filePath, gson.toJson(json), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                saveToJson(gson, "blocks_shulkers", json);
                 info("Exported blocks to ChestIndex/blocks_shulkers.json (calculated as shulkers, by name).");
             } catch (IOException e) {
                 error("Failed to export blocks (Shulkers): " + e.getMessage());
