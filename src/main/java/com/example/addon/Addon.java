@@ -41,6 +41,7 @@ public class Addon extends MeteorAddon {
 //        Modules.get().add(new XPBot());
 
 //        Modules.get().add(new UnknownAccountNotifier());
+        Modules.get().add(new GrimDuraFirework());
 
         if (FabricLoader.getInstance().isModLoaded("xaeroplus"))
         {
