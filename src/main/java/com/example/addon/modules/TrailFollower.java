@@ -59,7 +59,7 @@ public class TrailFollower extends Module
     public final Setting<Double> pathDistance = sgGeneral.add(new DoubleSetting.Builder()
         .name("[Baritone] Path Distance")
         .description("The distance to mark baritone paths in blocks.")
-        .defaultValue(100)
+        .defaultValue(500)
         .min(10)
         .sliderMax(1000)
         .build()
@@ -69,6 +69,14 @@ public class TrailFollower extends Module
         .name("[Baritone] Auto Start Baritone Elytra")
         .description("Starts baritone elytra for you.")
         .defaultValue(false)
+        .build()
+    );
+
+    public final Setting<Integer> baritoneUpdateTicks = sgGeneral.add(new IntSetting.Builder()
+        .name("[Baritone] Baritone Path Update Ticks")
+        .description("The amount of ticks between updates to the baritone goal. Low values may cause high instability.")
+        .defaultValue(5 * 20) // 5 seconds
+        .sliderRange(20, 30 * 20)
         .build()
     );
 
@@ -128,19 +136,29 @@ public class TrailFollower extends Module
     public void onDeactivate()
     {
         XaeroPlus.EVENT_BUS.unregister(this);
-        if (followMode == FollowMode.YAWLOCK)
+        switch (followMode)
         {
-            Class<? extends Module> pitch40Util = Pitch40Util.class;
-            Module pitch40UtilModule = Modules.get().get(pitch40Util);
-            if (pitch40.get() && pitch40UtilModule.isActive())
+            case BARITONE:
             {
-                pitch40UtilModule.toggle();
+                BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("cancel");
+                break;
             }
-            ((Setting<Boolean>)pitch40UtilModule.settings.get("Auto Firework")).set(oldAutoFireworkValue);
+            case YAWLOCK:
+            {
+                Class<? extends Module> pitch40Util = Pitch40Util.class;
+                Module pitch40UtilModule = Modules.get().get(pitch40Util);
+                if (pitch40.get() && pitch40UtilModule.isActive())
+                {
+                    pitch40UtilModule.toggle();
+                }
+                ((Setting<Boolean>)pitch40UtilModule.settings.get("Auto Firework")).set(oldAutoFireworkValue);
+            }
         }
     }
 
     Vec3d targetPos;
+
+    int baritoneSetGoalTicks = 0;
 
     @EventHandler
     private void onTick(TickEvent.Post event)
@@ -149,11 +167,19 @@ public class TrailFollower extends Module
         {
             case BARITONE:
             {
-                BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalXZ((int) targetPos.x, (int) targetPos.z));
-                if (autoElytra.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().currentDestination() == null)
+                if (baritoneSetGoalTicks > 0)
                 {
-                    BaritoneAPI.getSettings().elytraTermsAccepted.value = true;
-                    BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("elytra");
+                    baritoneSetGoalTicks--;
+                }
+                else if (baritoneSetGoalTicks == 0)
+                {
+                    baritoneSetGoalTicks = baritoneUpdateTicks.get();
+                    BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalXZ((int) targetPos.x, (int) targetPos.z));
+                    if (autoElytra.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().currentDestination() == null)
+                    {
+                        BaritoneAPI.getSettings().elytraTermsAccepted.value = true;
+                        BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("elytra");
+                    }
                 }
                 break;
             }
