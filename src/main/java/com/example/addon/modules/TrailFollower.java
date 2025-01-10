@@ -23,12 +23,7 @@ public class TrailFollower extends Module
 {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    public final Setting<Boolean> pitch40 = sgGeneral.add(new BoolSetting.Builder()
-        .name("Auto Pitch 40")
-        .description("Incorporates pitch 40 into the follower.")
-        .defaultValue(true)
-        .build()
-    );
+    private FollowMode followMode;
 
     public final Setting<Integer> maxTrailLength = sgGeneral.add(new IntSetting.Builder()
         .name("Max Trail Length")
@@ -39,11 +34,18 @@ public class TrailFollower extends Module
         .build()
     );
 
+    public final Setting<Boolean> pitch40 = sgGeneral.add(new BoolSetting.Builder()
+        .name("Auto Pitch 40")
+        .description("Incorporates pitch 40 into the follower.")
+        .defaultValue(true)
+        .build()
+    );
+
     public final Setting<Boolean> pitch40Firework = sgGeneral.add(new BoolSetting.Builder()
         .name("Auto Firework")
         .description("Uses a firework automatically if your velocity is too low.")
         .defaultValue(true)
-        .visible(pitch40::get)
+        .visible(() -> pitch40.get())
         .build()
     );
 
@@ -51,6 +53,22 @@ public class TrailFollower extends Module
         .name("Rotate Scaling")
         .description("Scaling of how fast the yaw changes. 1 = instant, 0 = doesn't change")
         .defaultValue(0.5)
+        .build()
+    );
+
+    public final Setting<Double> pathDistance = sgGeneral.add(new DoubleSetting.Builder()
+        .name("[Baritone] Path Distance")
+        .description("The distance to mark baritone paths in blocks.")
+        .defaultValue(100)
+        .min(10)
+        .sliderMax(1000)
+        .build()
+    );
+
+    public final Setting<Boolean> autoElytra = sgGeneral.add(new BoolSetting.Builder()
+        .name("[Baritone] Auto Start Baritone Elytra")
+        .description("Starts baritone elytra for you.")
+        .defaultValue(false)
         .build()
     );
 
@@ -67,22 +85,38 @@ public class TrailFollower extends Module
     public void onActivate()
     {
         XaeroPlus.EVENT_BUS.register(this);
-        if (mc.player != null)
+        if (mc.player != null && mc.world != null)
         {
-            Class<? extends Module> pitch40Util = Pitch40Util.class;
-            Module pitch40UtilModule = Modules.get().get(pitch40Util);
-            if (pitch40.get() && !pitch40UtilModule.isActive())
+            if (!mc.world.getDimension().hasCeiling())
             {
-                pitch40UtilModule.toggle();
-                if (pitch40Firework.get())
-                {
-                    Setting<Boolean> setting = ((Setting<Boolean>)pitch40UtilModule.settings.get("Auto Firework"));
-                    oldAutoFireworkValue = setting.get();
-                    setting.set(true);
-                }
+                followMode = FollowMode.YAWLOCK;
+                info("You are in the overworld or end, basic yaw mode will be used.");
+            }
+            else
+            {
+                followMode = FollowMode.BARITONE;
+                info("You are in the nether, baritone mode will be used.");
             }
 
-            targetYaw = mc.player.getYaw();
+            if (followMode == FollowMode.YAWLOCK)
+            {
+                Class<? extends Module> pitch40Util = Pitch40Util.class;
+                Module pitch40UtilModule = Modules.get().get(pitch40Util);
+                if (pitch40.get() && !pitch40UtilModule.isActive())
+                {
+                    pitch40UtilModule.toggle();
+                    if (pitch40Firework.get())
+                    {
+                        Setting<Boolean> setting = ((Setting<Boolean>)pitch40UtilModule.settings.get("Auto Firework"));
+                        info("Auto Firework enabled, if you want to change the velocity threshold or the firework cooldown check the settings under Pitch40Util.");
+                        oldAutoFireworkValue = setting.get();
+                        setting.set(true);
+                    }
+                }
+            }
+            // set original pos to pathDistance blocks in the direction the player is facing
+            Vec3d offset = (new Vec3d(Math.sin(-mc.player.getYaw() * Math.PI / 180), 0, Math.cos(-mc.player.getYaw() * Math.PI / 180)).normalize()).multiply(pathDistance.get());
+            targetPos = mc.player.getPos().add(offset);
         }
         else
         {
@@ -94,21 +128,41 @@ public class TrailFollower extends Module
     public void onDeactivate()
     {
         XaeroPlus.EVENT_BUS.unregister(this);
-        Class<? extends Module> pitch40Util = Pitch40Util.class;
-        Module pitch40UtilModule = Modules.get().get(pitch40Util);
-        if (pitch40.get() && pitch40UtilModule.isActive())
+        if (followMode == FollowMode.YAWLOCK)
         {
-            pitch40UtilModule.toggle();
+            Class<? extends Module> pitch40Util = Pitch40Util.class;
+            Module pitch40UtilModule = Modules.get().get(pitch40Util);
+            if (pitch40.get() && pitch40UtilModule.isActive())
+            {
+                pitch40UtilModule.toggle();
+            }
+            ((Setting<Boolean>)pitch40UtilModule.settings.get("Auto Firework")).set(oldAutoFireworkValue);
         }
-        ((Setting<Boolean>)pitch40UtilModule.settings.get("Auto Firework")).set(oldAutoFireworkValue);
     }
 
-    float targetYaw;
+    Vec3d targetPos;
 
     @EventHandler
     private void onTick(TickEvent.Post event)
     {
-        mc.player.setYaw(smoothRotation(mc.player.getYaw(), targetYaw));
+        switch (followMode)
+        {
+            case BARITONE:
+            {
+                BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalXZ((int) targetPos.x, (int) targetPos.z));
+                if (autoElytra.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().currentDestination() == null)
+                {
+                    BaritoneAPI.getSettings().elytraTermsAccepted.value = true;
+                    BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("elytra");
+                }
+                break;
+            }
+            case YAWLOCK: {
+                mc.player.setYaw(smoothRotation(mc.player.getYaw(), Rotations.getYaw(targetPos)));
+                break;
+            }
+        }
+
     }
 
     ArrayDeque<Vec3d> trail = new ArrayDeque<>();
@@ -145,8 +199,9 @@ public class TrailFollower extends Module
             // get average pos
             Vec3d averagePos = calculateAveragePosition(trail);
 
-            // set yaw to face average pos
-            targetYaw = (float) Rotations.getYaw(averagePos);
+            Vec3d positionVec = averagePos.subtract(mc.player.getPos()).normalize();
+
+            targetPos = mc.player.getPos().add(positionVec.multiply(pathDistance.get()));
         }
     }
 
@@ -170,6 +225,12 @@ public class TrailFollower extends Module
     {
         double diff = (target - current + 180) % 360 - 180;
         return diff < -180 ? diff + 360 : diff;
+    }
+
+    private enum FollowMode
+    {
+        BARITONE,
+        YAWLOCK
     }
 
 }
