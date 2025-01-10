@@ -36,6 +36,11 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AFKBoostFly());
         Modules.get().add(new ChatCoordSpammer());
         Modules.get().add(new Pitch40Util());
+//        Modules.get().add(new SpinnyThingy());
+//        Modules.get().add(new AutoTrade());
+//        Modules.get().add(new XPBot());
+
+//        Modules.get().add(new UnknownAccountNotifier());
 
         if (FabricLoader.getInstance().isModLoaded("xaeroplus"))
         {
