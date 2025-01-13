@@ -18,7 +18,6 @@ import xaeroplus.module.impl.OldChunks;
 import xaeroplus.module.impl.PaletteNewChunks;
 
 import java.util.ArrayDeque;
-import java.util.List;
 
 public class TrailFollower extends Module
 {
@@ -30,6 +29,24 @@ public class TrailFollower extends Module
         .defaultValue(20)
         .min(1)
         .sliderMax(100)
+        .build()
+    );
+
+    public final Setting<Integer> chunksBeforeStarting = sgGeneral.add(new IntSetting.Builder()
+        .name("Chunks Before Starting")
+        .description("Useful for afking looking for a trail. The amount of chunks before it gets detected as a trail.")
+        .defaultValue(10)
+        .min(1)
+        .sliderMax(50)
+        .build()
+    );
+
+    public final Setting<Integer> chunkConsiderationWindow = sgGeneral.add(new IntSetting.Builder()
+        .name("Chunk Timeframe")
+        .description("The amount of time in seconds that the chunks must be found in before starting.")
+        .defaultValue(5)
+        .min(1)
+        .sliderMax(20)
         .build()
     );
 
@@ -116,8 +133,11 @@ public class TrailFollower extends Module
 
     private boolean oldAutoFireworkValue;
     private FollowMode followMode;
+    private boolean followingTrail = false;
     private ArrayDeque<Vec3d> trail = new ArrayDeque<>();
-    private long lastFoundTime;
+    private ArrayDeque<Vec3d> possibleTrail = new ArrayDeque<>();
+    private long lastFoundTrailTime;
+    private long lastFoundPossibleTrailTime;
 
     // Credit to WarriorLost: https://github.com/WarriorLost/meteor-client/tree/master
 
@@ -130,6 +150,10 @@ public class TrailFollower extends Module
     public void onActivate()
     {
         baritoneSetGoalTicks = 0;
+        // remove both
+        followingTrail = false;
+        trail = new ArrayDeque<>();
+        possibleTrail = new ArrayDeque<>();
         XaeroPlus.EVENT_BUS.register(this);
         if (mc.player != null && mc.world != null)
         {
@@ -162,11 +186,12 @@ public class TrailFollower extends Module
             }
             // set original pos to pathDistance blocks in the direction the player is facing
             Vec3d offset = (new Vec3d(Math.sin(-mc.player.getYaw() * Math.PI / 180), 0, Math.cos(-mc.player.getYaw() * Math.PI / 180)).normalize()).multiply(pathDistance.get());
-            targetPos = mc.player.getPos().add(offset);
+            Vec3d targetPos = mc.player.getPos().add(offset);
             for (int i = 0; i < (maxTrailLength.get() * startDirectionWeighting.get()); i++)
             {
                 trail.add(targetPos);
             }
+            targetYaw = getActualYaw(mc.player.getYaw());
         }
         else
         {
@@ -199,7 +224,7 @@ public class TrailFollower extends Module
         trail.clear();
     }
 
-    private Vec3d targetPos;
+    private double targetYaw;
 
     private int baritoneSetGoalTicks = 0;
 
@@ -210,19 +235,14 @@ public class TrailFollower extends Module
             baritoneSetGoalTicks = baritoneUpdateTicks.get();
         }
         else if (followMode == FollowMode.BARITONE) return;
-        double angle = (mc.player.age % 360) * Math.PI / 180; // Convert age to radians
-        targetPos = new Vec3d(Math.cos(angle), 0, Math.sin(angle)).normalize();
+        targetYaw = mc.player.age % 360;
     }
 
     @EventHandler
     private void onTick(TickEvent.Post event)
     {
         if (mc.player == null || mc.world == null) return;
-        if (System.currentTimeMillis() - lastFoundTime > chunkFoundTimeout.get())
-        {
-            circle();
-            return;
-        }
+        if (followingTrail && System.currentTimeMillis() - lastFoundTrailTime > chunkFoundTimeout.get()) circle();
         switch (followMode)
         {
             case BARITONE:
@@ -234,10 +254,12 @@ public class TrailFollower extends Module
                 else if (baritoneSetGoalTicks == 0)
                 {
                     baritoneSetGoalTicks = baritoneUpdateTicks.get();
+                    Vec3d targetPos = positionInDirection(mc.player.getPos(), targetYaw, pathDistance.get());
                     BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalXZ((int) targetPos.x, (int) targetPos.z));
                     if (autoElytra.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().currentDestination() == null)
                     {
                         // TODO: Fix this
+                        info("The auto elytra mode is broken right now. If it's not working just turn it off and manually use #elytra to start.");
                         BaritoneAPI.getSettings().elytraTermsAccepted.value = true;
                         BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("elytra");
                     }
@@ -245,7 +267,7 @@ public class TrailFollower extends Module
                 break;
             }
             case YAWLOCK: {
-                mc.player.setYaw(smoothRotation(mc.player.getYaw(), Rotations.getYaw(targetPos)));
+                mc.player.setYaw(smoothRotation(getActualYaw(mc.player.getYaw()), targetYaw));
                 break;
             }
         }
@@ -274,20 +296,49 @@ public class TrailFollower extends Module
         // TODO: Add options for following certain types of chunks.
         if (!is119NewChunk)
         {
-            lastFoundTime = System.currentTimeMillis();
-            // add chunks to the list
             Vec3d pos = chunk.getPos().getCenterAtY(0).toCenterPos();
+
+            if (!followingTrail)
+            {
+                if (System.currentTimeMillis() - lastFoundPossibleTrailTime > chunkConsiderationWindow.get() * 1000)
+                {
+                    possibleTrail.clear();
+                }
+                possibleTrail.add(pos);
+                lastFoundPossibleTrailTime = System.currentTimeMillis();
+                if (possibleTrail.size() > chunksBeforeStarting.get())
+                {
+                    followingTrail = true;
+                    lastFoundTrailTime = System.currentTimeMillis();
+                    trail.addAll(possibleTrail);
+                    possibleTrail.clear();
+                }
+                return;
+            }
+
+
+
+
+
+            // add chunks to the list
+
+            double chunkAngle = Rotations.getYaw(pos);
+            double angleDiff = angleDifference(targetYaw, chunkAngle);
+
+            // Ignore chunks not in your direction
+            if (Math.abs(angleDiff) > 90) return;
+            lastFoundTrailTime = System.currentTimeMillis();
+
+            // free up one spot for a new chunk to be added
             while(trail.size() >= maxTrailLength.get())
             {
                 trail.pollFirst();
             }
 
-            double trailAngle = Rotations.getYaw(targetPos);
-            double chunkAngle = Rotations.getYaw(pos);
-            double angleDiff = angleDifference(trailAngle, chunkAngle);
-
             if (angleDiff > 0 && angleDiff < 90 && directionWeighting.get() == DirectionWeighting.LEFT)
             {
+                // add extra chunks to increase the weighting
+                // TODO: Maybe redo this to use a map of chunk pos to weights
                 for (int i = 0; i < directionWeightingMultiplier.get() - 1; i++)
                 {
                     trail.pollFirst();
@@ -315,7 +366,8 @@ public class TrailFollower extends Module
 
             Vec3d positionVec = averagePos.subtract(mc.player.getPos()).normalize();
 
-            targetPos = mc.player.getPos().add(positionVec.multiply(pathDistance.get()));
+            Vec3d targetPos = mc.player.getPos().add(positionVec.multiply(pathDistance.get()));
+            targetYaw = Rotations.getYaw(targetPos);
         }
     }
 
@@ -329,6 +381,11 @@ public class TrailFollower extends Module
         return new Vec3d(sumX / positions.size(), 0, sumZ / positions.size());
     }
 
+    private float getActualYaw(float yaw)
+    {
+        return (yaw % 360 + 360) % 360;
+    }
+
     private float smoothRotation(double current, double target)
     {
         double difference = angleDifference(target, current);
@@ -339,6 +396,12 @@ public class TrailFollower extends Module
     {
         double diff = (target - current + 180) % 360 - 180;
         return diff < -180 ? diff + 360 : diff;
+    }
+
+    private Vec3d positionInDirection(Vec3d pos, double yaw, double distance)
+    {
+        Vec3d offset = (new Vec3d(Math.sin(-yaw * Math.PI / 180), 0, Math.cos(-yaw * Math.PI / 180)).normalize()).multiply(distance);
+        return pos.add(offset);
     }
 
     private enum FollowMode
