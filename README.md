@@ -1,4 +1,4 @@
-# jeff mod
+# jeff mod (For minecraft 1.21.1)
 
 ## Features
 - AFKBoostFly (Useless on current 2b anticheat)
