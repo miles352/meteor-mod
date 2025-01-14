@@ -23,21 +23,21 @@ public class TrailFollower extends Module
 {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    // TODO: Set this automatically either by looking at the rate of chunk loads or by using yaw instead of block pos so size doesnt negatively effect result
     public final Setting<Integer> maxTrailLength = sgGeneral.add(new IntSetting.Builder()
         .name("Max Trail Length")
-        .description("The number of trail points to keep for the average. Adjust to change how quickly the average will change.")
+        .description("The number of trail points to keep for the average. Adjust to change how quickly the average will change. More does not necessarily equal better because if the list is too long it will contain chunks behind you.")
         .defaultValue(20)
-        .min(1)
-        .sliderMax(100)
+        .sliderRange(1, 100)
         .build()
     );
 
+    // make sure equal 0
     public final Setting<Integer> chunksBeforeStarting = sgGeneral.add(new IntSetting.Builder()
         .name("Chunks Before Starting")
         .description("Useful for afking looking for a trail. The amount of chunks before it gets detected as a trail.")
         .defaultValue(10)
-        .min(1)
-        .sliderMax(50)
+        .sliderRange(1, 50)
         .build()
     );
 
@@ -45,8 +45,7 @@ public class TrailFollower extends Module
         .name("Chunk Timeframe")
         .description("The amount of time in seconds that the chunks must be found in before starting.")
         .defaultValue(5)
-        .min(1)
-        .sliderMax(20)
+        .sliderRange(1, 20)
         .build()
     );
 
@@ -69,50 +68,7 @@ public class TrailFollower extends Module
         .name("Rotate Scaling")
         .description("Scaling of how fast the yaw changes. 1 = instant, 0 = doesn't change")
         .defaultValue(0.5)
-        .build()
-    );
-
-    public final Setting<Double> pathDistance = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Path Distance")
-        .description("The distance to add trail positions in the direction the player is facing.")
-        .defaultValue(500)
-        .min(10)
-        .sliderMax(1000)
-        .build()
-    );
-
-    public final Setting<Double> startDirectionWeighting = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Start Direction Weight")
-        .description("The weighting of the direction the player is facing when starting the trail. 0 for no weighting (not recommended) 1 for max weighting (will take a bit for direction to change)")
-        .defaultValue(0.5)
-        .min(0)
-        .sliderMax(1)
-        .build()
-    );
-
-    public final Setting<DirectionWeighting> directionWeighting = sgGeneral.add(new EnumSetting.Builder<DirectionWeighting>()
-        .name("Direction Weighting")
-        .description("How the chunks found should be weighted. Useful for path splits. Left will weight chunks to the left of the player higher, right will weigh chunks to the right higher, and none will be in the middle/random. ")
-        .defaultValue(DirectionWeighting.NONE)
-        .build()
-    );
-
-    public final Setting<Integer> directionWeightingMultiplier = sgGeneral.add(new IntSetting.Builder()
-        .name("Direction Weighting Multiplier")
-        .description("The multiplier for how much weight should be given to chunks in the direction specified. Values are capped to be in the range [2, maxTrailLength].")
-        .defaultValue(2)
-        .min(2)
-        .sliderMax(10)
-        .visible(() -> directionWeighting.get() != DirectionWeighting.NONE)
-        .build()
-    );
-
-    public final Setting<Double> chunkFoundTimeout = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Chunk Found Timeout")
-        .description("The amount of MS without a chunk found to trigger circling.")
-        .defaultValue(1000 * 5)
-        .min(1000)
-        .sliderMax(1000 * 10)
+        .sliderRange(0.0, 1.0)
         .build()
     );
 
@@ -123,7 +79,52 @@ public class TrailFollower extends Module
         .build()
     );
 
-    public final Setting<Integer> baritoneUpdateTicks = sgGeneral.add(new IntSetting.Builder()
+    private final SettingGroup sgAdvanced = settings.createGroup("Advanced", false);
+
+    public final Setting<Double> pathDistance = sgAdvanced.add(new DoubleSetting.Builder()
+        .name("Path Distance")
+        .description("The distance to add trail positions in the direction the player is facing.")
+        .defaultValue(500)
+        .sliderRange(100, 2000)
+        .build()
+    );
+
+    public final Setting<Double> startDirectionWeighting = sgAdvanced.add(new DoubleSetting.Builder()
+        .name("Start Direction Weight")
+        .description("The weighting of the direction the player is facing when starting the trail. 0 for no weighting (not recommended) 1 for max weighting (will take a bit for direction to change)")
+        .defaultValue(0.5)
+        .min(0)
+        .sliderMax(1)
+        .build()
+    );
+
+    public final Setting<DirectionWeighting> directionWeighting = sgAdvanced.add(new EnumSetting.Builder<DirectionWeighting>()
+        .name("Direction Weighting")
+        .description("How the chunks found should be weighted. Useful for path splits. Left will weight chunks to the left of the player higher, right will weigh chunks to the right higher, and none will be in the middle/random. ")
+        .defaultValue(DirectionWeighting.NONE)
+        .build()
+    );
+
+    public final Setting<Integer> directionWeightingMultiplier = sgAdvanced.add(new IntSetting.Builder()
+        .name("Direction Weighting Multiplier")
+        .description("The multiplier for how much weight should be given to chunks in the direction specified. Values are capped to be in the range [2, maxTrailLength].")
+        .defaultValue(2)
+        .min(2)
+        .sliderMax(10)
+        .visible(() -> directionWeighting.get() != DirectionWeighting.NONE)
+        .build()
+    );
+
+    public final Setting<Double> chunkFoundTimeout = sgAdvanced.add(new DoubleSetting.Builder()
+        .name("Chunk Found Timeout")
+        .description("The amount of MS without a chunk found to trigger circling.")
+        .defaultValue(1000 * 5)
+        .min(1000)
+        .sliderMax(1000 * 10)
+        .build()
+    );
+
+    public final Setting<Integer> baritoneUpdateTicks = sgAdvanced.add(new IntSetting.Builder()
         .name("[Baritone] Baritone Path Update Ticks")
         .description("The amount of ticks between updates to the baritone goal. Low values may cause high instability.")
         .defaultValue(5 * 20) // 5 seconds
