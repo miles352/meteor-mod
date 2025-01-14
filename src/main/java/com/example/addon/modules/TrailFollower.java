@@ -123,6 +123,15 @@ public class TrailFollower extends Module
         .build()
     );
 
+    public final Setting<Double> trailTimeout = sgAdvanced.add(new DoubleSetting.Builder()
+        .name("Trail Timeout")
+        .description("The amount of MS without a chunk found to stop following the trail.")
+        .defaultValue(1000 * 30)
+        .min(1000 * 10)
+        .sliderMax(1000 * 60)
+        .build()
+    );
+
     public final Setting<Integer> baritoneUpdateTicks = sgAdvanced.add(new IntSetting.Builder()
         .name("[Baritone] Baritone Path Update Ticks")
         .description("The amount of ticks between updates to the baritone goal. Low values may cause high instability.")
@@ -148,14 +157,18 @@ public class TrailFollower extends Module
         super(Addon.CATEGORY, "TrailFollower", "Automatically follows trails in all dimensions.");
     }
 
-    @Override
-    public void onActivate()
+    void resetTrail()
     {
         baritoneSetGoalTicks = 0;
-        // remove both
         followingTrail = false;
         trail = new ArrayDeque<>();
         possibleTrail = new ArrayDeque<>();
+    }
+
+    @Override
+    public void onActivate()
+    {
+        resetTrail();
         XaeroPlus.EVENT_BUS.register(this);
         if (mc.player != null && mc.world != null)
         {
@@ -240,7 +253,7 @@ public class TrailFollower extends Module
         targetYaw = mc.player.age % 360;
         if (mc.player.age % 100 == 0)
         {
-            sendInfo("Circling to look for new chunks");
+            sendInfo("Circling to look for new chunks, abandoning trail in " + (trailTimeout.get() - (System.currentTimeMillis() - lastFoundTrailTime)) / 1000 + " seconds.");
         }
     }
 
@@ -248,6 +261,12 @@ public class TrailFollower extends Module
     private void onTick(TickEvent.Post event)
     {
         if (mc.player == null || mc.world == null) return;
+        if (followingTrail && System.currentTimeMillis() - lastFoundTrailTime > trailTimeout.get())
+        {
+            resetTrail();
+            sendInfo("Trail timed out, stopping.");
+            // TODO: Add options for what to do next
+        }
         if (followingTrail && System.currentTimeMillis() - lastFoundTrailTime > chunkFoundTimeout.get()) circle();
         switch (followMode)
         {
