@@ -32,7 +32,6 @@ public class TrailFollower extends Module
         .build()
     );
 
-    // make sure equal 0
     public final Setting<Integer> chunksBeforeStarting = sgGeneral.add(new IntSetting.Builder()
         .name("Chunks Before Starting")
         .description("Useful for afking looking for a trail. The amount of chunks before it gets detected as a trail.")
@@ -132,6 +131,8 @@ public class TrailFollower extends Module
         .build()
     );
 
+    // TODO: Auto disconnect at certain chunk load speed
+
     private boolean oldAutoFireworkValue;
     private FollowMode followMode;
     private boolean followingTrail = false;
@@ -161,12 +162,12 @@ public class TrailFollower extends Module
             if (!mc.world.getDimension().hasCeiling())
             {
                 followMode = FollowMode.YAWLOCK;
-                info("You are in the overworld or end, basic yaw mode will be used.");
+                sendInfo("You are in the overworld or end, basic yaw mode will be used.");
             }
             else
             {
                 followMode = FollowMode.BARITONE;
-                info("You are in the nether, baritone mode will be used.");
+                sendInfo("You are in the nether, baritone mode will be used.");
             }
 
             if (followMode == FollowMode.YAWLOCK)
@@ -179,7 +180,7 @@ public class TrailFollower extends Module
                     if (pitch40Firework.get())
                     {
                         Setting<Boolean> setting = ((Setting<Boolean>)pitch40UtilModule.settings.get("Auto Firework"));
-                        info("Auto Firework enabled, if you want to change the velocity threshold or the firework cooldown check the settings under Pitch40Util.");
+                        sendInfo("Auto Firework enabled, if you want to change the velocity threshold or the firework cooldown check the settings under Pitch40Util.");
                         oldAutoFireworkValue = setting.get();
                         setting.set(true);
                     }
@@ -237,6 +238,10 @@ public class TrailFollower extends Module
         }
         else if (followMode == FollowMode.BARITONE) return;
         targetYaw = mc.player.age % 360;
+        if (mc.player.age % 100 == 0)
+        {
+            sendInfo("Circling to look for new chunks");
+        }
     }
 
     @EventHandler
@@ -260,7 +265,7 @@ public class TrailFollower extends Module
                     if (autoElytra.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().currentDestination() == null)
                     {
                         // TODO: Fix this
-                        info("The auto elytra mode is broken right now. If it's not working just turn it off and manually use #elytra to start.");
+                        sendInfo("The auto elytra mode is broken right now. If it's not working just turn it off and manually use #elytra to start.");
                         BaritoneAPI.getSettings().elytraTermsAccepted.value = true;
                         BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("elytra");
                     }
@@ -403,6 +408,11 @@ public class TrailFollower extends Module
     {
         Vec3d offset = (new Vec3d(Math.sin(-yaw * Math.PI / 180), 0, Math.cos(-yaw * Math.PI / 180)).normalize()).multiply(distance);
         return pos.add(offset);
+    }
+
+    private void sendInfo(String message)
+    {
+        info("[TrailFollower] " + message);
     }
 
     private enum FollowMode
