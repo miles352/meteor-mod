@@ -13,13 +13,20 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.WorldChunk;
 import xaeroplus.XaeroPlus;
 import xaeroplus.event.ChunkDataEvent;
 import xaeroplus.module.ModuleManager;
+import xaeroplus.module.impl.OldChunks;
 import xaeroplus.module.impl.PaletteNewChunks;
 import xaeroplus.util.ChunkScanner;
+import xaeroplus.util.ChunkUtils;
 
 import java.util.ArrayDeque;
 
@@ -337,9 +344,21 @@ public class TrailFollower extends Module
 //            );
 
 
-        // TODO: Find a better way to do this
+        // TODO: Find a better way to do this bc Xaero is already checking the chunk
+        boolean is112OldChunk = false;
         ReferenceSet<Block> OVERWORLD_BLOCKS = ReferenceOpenHashSet.of(new Block[]{Blocks.COPPER_ORE, Blocks.DEEPSLATE_COPPER_ORE, Blocks.AMETHYST_BLOCK, Blocks.SMOOTH_BASALT, Blocks.TUFF, Blocks.KELP, Blocks.KELP_PLANT, Blocks.POINTED_DRIPSTONE, Blocks.DRIPSTONE_BLOCK, Blocks.DEEPSLATE, Blocks.AZALEA, Blocks.BIG_DRIPLEAF, Blocks.BIG_DRIPLEAF_STEM, Blocks.SMALL_DRIPLEAF, Blocks.MOSS_BLOCK, Blocks.CAVE_VINES, Blocks.CAVE_VINES_PLANT});
-        boolean is112OldChunk = !ChunkScanner.chunkContainsBlocks(chunk, OVERWORLD_BLOCKS, 5);
+        ReferenceSet<Block> NETHER_BLOCKS = ReferenceOpenHashSet.of(new Block[]{Blocks.ANCIENT_DEBRIS, Blocks.BLACKSTONE, Blocks.BASALT, Blocks.CRIMSON_NYLIUM, Blocks.WARPED_NYLIUM, Blocks.NETHER_GOLD_ORE, Blocks.CHAIN});
+        // In the end
+        if (!mc.world.getDimension().hasCeiling() && !mc.world.getDimension().bedWorks())
+        {
+            RegistryEntry<Biome> biomeHolder = this.mc.world.getBiome(new BlockPos(ChunkUtils.chunkCoordToCoord(chunk.getPos().x) + 8, 64, ChunkUtils.chunkCoordToCoord(chunk.getPos().z) + 8));
+            if (biomeHolder.getKey().filter((biome) -> biome.equals(BiomeKeys.THE_END)).isPresent()) is112OldChunk = true;
+        }
+        else
+        {
+            // Not in the end
+            is112OldChunk = !ChunkScanner.chunkContainsBlocks(chunk, !mc.world.getDimension().hasCeiling() ? OVERWORLD_BLOCKS : NETHER_BLOCKS, 5);
+        }
 
         // TODO: Add options for following certain types of chunks.
 
