@@ -18,7 +18,6 @@ import net.minecraft.world.chunk.WorldChunk;
 import xaeroplus.XaeroPlus;
 import xaeroplus.event.ChunkDataEvent;
 import xaeroplus.module.ModuleManager;
-import xaeroplus.module.impl.OldChunks;
 import xaeroplus.module.impl.PaletteNewChunks;
 import xaeroplus.util.ChunkScanner;
 
@@ -193,12 +192,12 @@ public class TrailFollower extends Module
             if (!mc.world.getDimension().hasCeiling())
             {
                 followMode = FollowMode.YAWLOCK;
-                sendInfo("You are in the overworld or end, basic yaw mode will be used.");
+                info("You are in the overworld or end, basic yaw mode will be used.");
             }
             else
             {
                 followMode = FollowMode.BARITONE;
-                sendInfo("You are in the nether, baritone mode will be used.");
+                info("You are in the nether, baritone mode will be used.");
             }
 
             if (followMode == FollowMode.YAWLOCK)
@@ -211,7 +210,7 @@ public class TrailFollower extends Module
                     if (pitch40Firework.get())
                     {
                         Setting<Boolean> setting = ((Setting<Boolean>)pitch40UtilModule.settings.get("Auto Firework"));
-                        sendInfo("Auto Firework enabled, if you want to change the velocity threshold or the firework cooldown check the settings under Pitch40Util.");
+                        info("Auto Firework enabled, if you want to change the velocity threshold or the firework cooldown check the settings under Pitch40Util.");
                         oldAutoFireworkValue = setting.get();
                         setting.set(true);
                     }
@@ -271,7 +270,7 @@ public class TrailFollower extends Module
         targetYaw = getActualYaw((float) (targetYaw + circlingDegPerTick.get()));
         if (mc.player.age % 100 == 0)
         {
-            sendInfo("Circling to look for new chunks, abandoning trail in " + (trailTimeout.get() - (System.currentTimeMillis() - lastFoundTrailTime)) / 1000 + " seconds.");
+            info("Circling to look for new chunks, abandoning trail in " + (trailTimeout.get() - (System.currentTimeMillis() - lastFoundTrailTime)) / 1000 + " seconds.");
         }
     }
 
@@ -282,7 +281,7 @@ public class TrailFollower extends Module
         if (followingTrail && System.currentTimeMillis() - lastFoundTrailTime > trailTimeout.get())
         {
             resetTrail();
-            sendInfo("Trail timed out, stopping.");
+            info("Trail timed out, stopping.");
             // TODO: Add options for what to do next
         }
         if (followingTrail && System.currentTimeMillis() - lastFoundTrailTime > chunkFoundTimeout.get()) circle();
@@ -302,7 +301,7 @@ public class TrailFollower extends Module
                     if (autoElytra.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().currentDestination() == null)
                     {
                         // TODO: Fix this
-                        sendInfo("The auto elytra mode is broken right now. If it's not working just turn it off and manually use #elytra to start.");
+                        info("The auto elytra mode is broken right now. If it's not working just turn it off and manually use #elytra to start.");
                         BaritoneAPI.getSettings().elytraTermsAccepted.value = true;
                         BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("elytra");
                     }
@@ -451,11 +450,6 @@ public class TrailFollower extends Module
     {
         Vec3d offset = (new Vec3d(Math.sin(-yaw * Math.PI / 180), 0, Math.cos(-yaw * Math.PI / 180)).normalize()).multiply(distance);
         return pos.add(offset);
-    }
-
-    private void sendInfo(String message)
-    {
-        info("[TrailFollower] " + message);
     }
 
     private enum FollowMode
