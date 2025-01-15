@@ -3,12 +3,16 @@ package com.example.addon.modules;
 import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalXZ;
 import com.example.addon.Addon;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.chunk.WorldChunk;
 import xaeroplus.XaeroPlus;
@@ -16,6 +20,7 @@ import xaeroplus.event.ChunkDataEvent;
 import xaeroplus.module.ModuleManager;
 import xaeroplus.module.impl.OldChunks;
 import xaeroplus.module.impl.PaletteNewChunks;
+import xaeroplus.util.ChunkScanner;
 
 import java.util.ArrayDeque;
 
@@ -66,7 +71,7 @@ public class TrailFollower extends Module
     public final Setting<Double> rotateScaling = sgGeneral.add(new DoubleSetting.Builder()
         .name("Rotate Scaling")
         .description("Scaling of how fast the yaw changes. 1 = instant, 0 = doesn't change")
-        .defaultValue(0.5)
+        .defaultValue(0.1)
         .sliderRange(0.0, 1.0)
         .build()
     );
@@ -143,10 +148,14 @@ public class TrailFollower extends Module
     // TODO: Auto disconnect at certain chunk load speed
 
     private boolean oldAutoFireworkValue;
+
     private FollowMode followMode;
+
     private boolean followingTrail = false;
+
     private ArrayDeque<Vec3d> trail = new ArrayDeque<>();
     private ArrayDeque<Vec3d> possibleTrail = new ArrayDeque<>();
+
     private long lastFoundTrailTime;
     private long lastFoundPossibleTrailTime;
 
@@ -311,15 +320,22 @@ public class TrailFollower extends Module
                 chunk.getWorld().getRegistryKey()
             );
 
-        boolean is112OldChunk = ModuleManager.getModule(OldChunks.class)
-            .isOldChunk(
-                chunk.getPos().x,
-                chunk.getPos().z,
-                chunk.getWorld().getRegistryKey()
-            );
+        // useless because old chunks are stored asynchrnously and will not be ready inside the chunk event
+//        boolean is112OldChunk = ModuleManager.getModule(OldChunks.class)
+//            .isOldChunk(
+//                chunk.getPos().x,
+//                chunk.getPos().z,
+//                chunk.getWorld().getRegistryKey()
+//            );
+
+
+        // TODO: Find a better way to do this
+        ReferenceSet<Block> OVERWORLD_BLOCKS = ReferenceOpenHashSet.of(new Block[]{Blocks.COPPER_ORE, Blocks.DEEPSLATE_COPPER_ORE, Blocks.AMETHYST_BLOCK, Blocks.SMOOTH_BASALT, Blocks.TUFF, Blocks.KELP, Blocks.KELP_PLANT, Blocks.POINTED_DRIPSTONE, Blocks.DRIPSTONE_BLOCK, Blocks.DEEPSLATE, Blocks.AZALEA, Blocks.BIG_DRIPLEAF, Blocks.BIG_DRIPLEAF_STEM, Blocks.SMALL_DRIPLEAF, Blocks.MOSS_BLOCK, Blocks.CAVE_VINES, Blocks.CAVE_VINES_PLANT});
+        boolean is112OldChunk = !ChunkScanner.chunkContainsBlocks(chunk, OVERWORLD_BLOCKS, 5);
 
         // TODO: Add options for following certain types of chunks.
-        if (!is119NewChunk)
+
+        if (!is119NewChunk || is112OldChunk)
         {
             Vec3d pos = chunk.getPos().getCenterAtY(0).toCenterPos();
 
@@ -341,8 +357,7 @@ public class TrailFollower extends Module
                 return;
             }
 
-
-
+            // TODO: Fix bug where trail instantly times out after starting real trail
 
 
             // add chunks to the list
