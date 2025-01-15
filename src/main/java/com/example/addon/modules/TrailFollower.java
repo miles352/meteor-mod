@@ -268,7 +268,6 @@ public class TrailFollower extends Module
             baritoneSetGoalTicks = baritoneUpdateTicks.get();
         }
         else if (followMode == FollowMode.BARITONE) return;
-        targetYaw = mc.player.age % 360;
         targetYaw = getActualYaw((float) (targetYaw + circlingDegPerTick.get()));
         if (mc.player.age % 100 == 0)
         {
