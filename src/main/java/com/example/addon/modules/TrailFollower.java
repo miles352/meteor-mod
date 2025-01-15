@@ -128,6 +128,15 @@ public class TrailFollower extends Module
         .build()
     );
 
+    public final Setting<Double> circlingDegPerTick = sgAdvanced.add(new DoubleSetting.Builder()
+        .name("Circling Degrees Per Tick")
+        .description("The amount of degrees to change per tick while circling.")
+        .defaultValue(2.0)
+        .min(1.0)
+        .sliderMax(20.0)
+        .build()
+    );
+
     public final Setting<Double> trailTimeout = sgAdvanced.add(new DoubleSetting.Builder()
         .name("Trail Timeout")
         .description("The amount of MS without a chunk found to stop following the trail.")
@@ -260,6 +269,7 @@ public class TrailFollower extends Module
         }
         else if (followMode == FollowMode.BARITONE) return;
         targetYaw = mc.player.age % 360;
+        targetYaw = getActualYaw((float) (targetYaw + circlingDegPerTick.get()));
         if (mc.player.age % 100 == 0)
         {
             sendInfo("Circling to look for new chunks, abandoning trail in " + (trailTimeout.get() - (System.currentTimeMillis() - lastFoundTrailTime)) / 1000 + " seconds.");
