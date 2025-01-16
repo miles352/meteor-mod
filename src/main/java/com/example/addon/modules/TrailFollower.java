@@ -274,7 +274,7 @@ public class TrailFollower extends Module
             baritoneSetGoalTicks = baritoneUpdateTicks.get();
         }
         else if (followMode == FollowMode.BARITONE) return;
-        targetYaw = getActualYaw((float) (targetYaw + circlingDegPerTick.get()));
+        mc.player.setYaw(getActualYaw((float) (mc.player.getYaw() + circlingDegPerTick.get())));
         if (mc.player.age % 100 == 0)
         {
             info("Circling to look for new chunks, abandoning trail in " + (trailTimeout.get() - (System.currentTimeMillis() - lastFoundTrailTime)) / 1000 + " seconds.");
@@ -291,7 +291,11 @@ public class TrailFollower extends Module
             info("Trail timed out, stopping.");
             // TODO: Add options for what to do next
         }
-        if (followingTrail && System.currentTimeMillis() - lastFoundTrailTime > chunkFoundTimeout.get()) circle();
+        if (followingTrail && System.currentTimeMillis() - lastFoundTrailTime > chunkFoundTimeout.get())
+        {
+            circle();
+            return;
+        }
         switch (followMode)
         {
             case BARITONE:
