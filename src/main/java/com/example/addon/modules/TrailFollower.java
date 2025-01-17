@@ -7,25 +7,25 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSet;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.Rotations;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.WorldChunk;
 import xaeroplus.XaeroPlus;
 import xaeroplus.event.ChunkDataEvent;
 import xaeroplus.module.ModuleManager;
-import xaeroplus.module.impl.OldChunks;
 import xaeroplus.module.impl.PaletteNewChunks;
 import xaeroplus.util.ChunkScanner;
 import xaeroplus.util.ChunkUtils;
@@ -59,6 +59,13 @@ public class TrailFollower extends Module
         .description("The amount of time in seconds that the chunks must be found in before starting.")
         .defaultValue(5)
         .sliderRange(1, 20)
+        .build()
+    );
+
+    public final Setting<TrailEndBehavior> trailEndBehavior = sgGeneral.add(new EnumSetting.Builder<TrailEndBehavior>()
+        .name("Trail End Behavior")
+        .description("What to do when the trail ends.")
+        .defaultValue(TrailEndBehavior.DISABLE)
         .build()
     );
 
@@ -168,6 +175,13 @@ public class TrailFollower extends Module
         .description("The amount of ticks between updates to the baritone goal. Low values may cause high instability.")
         .defaultValue(5 * 20) // 5 seconds
         .sliderRange(20, 30 * 20)
+        .build()
+    );
+
+    public final Setting<Boolean> debug = sgAdvanced.add(new BoolSetting.Builder()
+        .name("Debug")
+        .description("Debug mode.")
+        .defaultValue(false)
         .build()
     );
 
@@ -311,6 +325,14 @@ public class TrailFollower extends Module
             resetTrail();
             info("Trail timed out, stopping.");
             // TODO: Add options for what to do next
+            switch (trailEndBehavior.get())
+            {
+                case DISABLE:
+                {
+                    this.toggle();
+                    break;
+                }
+            }
         }
         if (followingTrail && System.currentTimeMillis() - lastFoundTrailTime > chunkFoundTimeout.get())
         {
@@ -348,6 +370,21 @@ public class TrailFollower extends Module
 
     }
 
+    Vec3d posDebug;
+
+    @EventHandler
+    private void onRender(Render3DEvent event)
+    {
+        if (!debug.get()) return;
+        Vec3d targetPos = positionInDirection(mc.player.getPos(), targetYaw, 10);
+        // target line
+        event.renderer.line(mc.player.getX(), mc.player.getY(), mc.player.getZ(), targetPos.x, targetPos.y, targetPos.z, new Color(255, 0, 0));
+        // chunk
+        if (posDebug != null) event.renderer.line(mc.player.getX(), mc.player.getY(), mc.player.getZ(), posDebug.x, targetPos.y, posDebug.z, new Color(0, 0, 255));
+    }
+
+
+
     @net.lenni0451.lambdaevents.EventHandler(priority = -1)
     public void onChunkData(ChunkDataEvent event)
     {
@@ -364,15 +401,6 @@ public class TrailFollower extends Module
                 chunk.getPos().z,
                 chunk.getWorld().getRegistryKey()
             );
-
-        // useless because old chunks are stored asynchrnously and will not be ready inside the chunk event
-//        boolean is112OldChunk = ModuleManager.getModule(OldChunks.class)
-//            .isOldChunk(
-//                chunk.getPos().x,
-//                chunk.getPos().z,
-//                chunk.getWorld().getRegistryKey()
-//            );
-
 
         // TODO: Find a better way to do this bc Xaero is already checking the chunk
         boolean is112OldChunk = false;
@@ -395,6 +423,7 @@ public class TrailFollower extends Module
         if (!is119NewChunk || is112OldChunk)
         {
             Vec3d pos = chunk.getPos().getCenterAtY(0).toCenterPos();
+            posDebug = pos;
 
             if (!followingTrail)
             {
@@ -420,8 +449,13 @@ public class TrailFollower extends Module
             double chunkAngle = Rotations.getYaw(pos);
             double angleDiff = angleDifference(targetYaw, chunkAngle);
 
-            // Ignore chunks not in your direction
-            if (Math.abs(angleDiff) > 90) return;
+            // Ignore chunks not in the direction of the target
+            // This shouldn't be needed assuming the chunk cache works
+//            if (Math.abs(angleDiff) > 90)
+//            {
+//                info("Greater than 90!");
+//                return;
+//            }
             lastFoundTrailTime = System.currentTimeMillis();
 
             // free up one spot for a new chunk to be added
@@ -510,6 +544,11 @@ public class TrailFollower extends Module
         LEFT,
         NONE,
         RIGHT
+    }
+
+    public enum TrailEndBehavior
+    {
+        DISABLE,
     }
 
 }
