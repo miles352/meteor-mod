@@ -3,6 +3,8 @@ package com.example.addon.modules;
 import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalXZ;
 import com.example.addon.Addon;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSet;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -28,6 +30,7 @@ import xaeroplus.module.impl.PaletteNewChunks;
 import xaeroplus.util.ChunkScanner;
 import xaeroplus.util.ChunkUtils;
 
+import java.time.Duration;
 import java.util.ArrayDeque;
 
 public class TrailFollower extends Module
@@ -152,6 +155,14 @@ public class TrailFollower extends Module
         .build()
     );
 
+    public final Setting<Integer> chunkCacheLength = sgAdvanced.add(new IntSetting.Builder()
+        .name("Chunk Cache Length")
+        .description("The amount of chunks to keep in the cache. (Won't be applied until deactivating)")
+        .defaultValue(100_000)
+        .sliderRange(0, 10_000_000)
+        .build()
+    );
+
     public final Setting<Integer> baritoneUpdateTicks = sgAdvanced.add(new IntSetting.Builder()
         .name("[Baritone] Baritone Path Update Ticks")
         .description("The amount of ticks between updates to the baritone goal. Low values may cause high instability.")
@@ -173,6 +184,11 @@ public class TrailFollower extends Module
 
     private long lastFoundTrailTime;
     private long lastFoundPossibleTrailTime;
+
+    private Cache<Long, Byte> seenChunksCache = Caffeine.newBuilder()
+        .maximumSize(chunkCacheLength.get())
+        .expireAfterWrite(Duration.ofMinutes(5))
+        .build();
 
     // Credit to WarriorLost: https://github.com/WarriorLost/meteor-client/tree/master
 
@@ -241,6 +257,11 @@ public class TrailFollower extends Module
     @Override
     public void onDeactivate()
     {
+        // do this at the end to free memory
+        seenChunksCache = Caffeine.newBuilder()
+            .maximumSize(chunkCacheLength.get())
+            .expireAfterWrite(Duration.ofMinutes(5))
+            .build();
         XaeroPlus.EVENT_BUS.unregister(this);
         switch (followMode)
         {
@@ -330,8 +351,13 @@ public class TrailFollower extends Module
     @net.lenni0451.lambdaevents.EventHandler(priority = -1)
     public void onChunkData(ChunkDataEvent event)
     {
-        if (event.seenChunk()) return;
         WorldChunk chunk = event.chunk();
+        long chunkLong = chunk.getPos().toLong();
+
+        // if found in the cache then ignore the chunk
+        if (seenChunksCache.getIfPresent(chunkLong) != null) return;
+
+        seenChunksCache.put(chunkLong, Byte.MAX_VALUE);
         boolean is119NewChunk = ModuleManager.getModule(PaletteNewChunks.class)
             .isNewChunk(
                 chunk.getPos().x,
@@ -387,8 +413,6 @@ public class TrailFollower extends Module
                 }
                 return;
             }
-
-            // TODO: Fix bug where trail instantly times out after starting real trail
 
 
             // add chunks to the list
