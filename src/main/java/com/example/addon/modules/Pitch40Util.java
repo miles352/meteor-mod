@@ -54,6 +54,13 @@ public class Pitch40Util extends Module {
         .build()
     );
 
+    public final Setting<Boolean> grimDura = sgGeneral.add(new BoolSetting.Builder()
+        .name("Require Elytra")
+        .description("Swaps to elytra before rocketing, fixes issues on mio grim dura.")
+        .defaultValue(false)
+        .build()
+    );
+
     public Pitch40Util() {
         super(Addon.CATEGORY, "Pitch40Util", "Makes sure pitch 40 stays on when reconnecting to 2b2t, and sets your bounds as you reach highest point each climb.");
     }
@@ -122,7 +129,7 @@ public class Pitch40Util extends Module {
                 if (autoFirework.get() && mc.player.getVelocity().y < velocityThreshold.get() && mc.player.getY() < (double)elytraFlyModule.settings.get("pitch40-upper-bounds").get())
                 {
                     if (fireworkCooldown == 0) {
-                        int launchStatus = firework(mc);
+                        int launchStatus = firework(mc, grimDura.get());
                         if (launchStatus >= 0)
                         {
                             fireworkCooldown = fireworkCooldownTicks.get();
