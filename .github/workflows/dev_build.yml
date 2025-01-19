@@ -1,5 +1,8 @@
 name: Publish Development Build
-on: push
+on:
+    push:
+        branches:
+            - "1.21.4"
 
 jobs:
   build:
