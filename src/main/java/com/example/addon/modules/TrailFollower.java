@@ -233,8 +233,16 @@ public class TrailFollower extends Module
             }
             else
             {
-                followMode = FollowMode.BARITONE;
-                info("You are in the nether, baritone mode will be used.");
+                try {
+                    Class.forName("baritone.api.BaritoneAPI");
+                    followMode = FollowMode.BARITONE;
+                    info("You are in the nether, baritone mode will be used.");
+                } catch (ClassNotFoundException e) {
+                    info("Baritone is required to trail follow in the nether. Disabling TrailFollower");
+                    this.toggle();
+                    return;
+                }
+
             }
 
             if (followMode == FollowMode.YAWLOCK)
@@ -277,6 +285,9 @@ public class TrailFollower extends Module
             .expireAfterWrite(Duration.ofMinutes(5))
             .build();
         XaeroPlus.EVENT_BUS.unregister(this);
+        trail.clear();
+        // If follow mode was never set due to baritone not being present, etc.
+        if (followMode == null) return;
         switch (followMode)
         {
             case BARITONE:
@@ -295,7 +306,6 @@ public class TrailFollower extends Module
                 ((Setting<Boolean>)pitch40UtilModule.settings.get("Auto Firework")).set(oldAutoFireworkValue);
             }
         }
-        trail.clear();
     }
 
     private double targetYaw;
