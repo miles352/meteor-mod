@@ -16,11 +16,10 @@ jobs:
       - name: Build
         run: ./gradlew build
       - name: Release
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: ncipollo/release-action@v1
         with:
-          repo_token: '${{ secrets.GITHUB_TOKEN }}'
-          automatic_release_tag: latest
-          prerelease: false
-          title: Latest Build
-          files: |
+#          automatic_release_tag: latest
+          allowUpdates: true
+          makeLatest: true
+          artifacts: |
             ./build/libs/*.jar
