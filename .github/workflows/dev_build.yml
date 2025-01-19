@@ -21,5 +21,6 @@ jobs:
 #          automatic_release_tag: latest
           allowUpdates: true
           makeLatest: true
+          tag: 1.21.4
           artifacts: |
             ./build/libs/*.jar
