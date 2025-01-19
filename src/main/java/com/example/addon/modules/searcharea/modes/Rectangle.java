@@ -30,24 +30,21 @@ public class Rectangle extends SearchAreaMode
     @Override
     public void onActivate()
     {
-        if (!searchArea.saveLocation.get().isBlank())
+        goingToStart = true;
+        File file = getJsonFile(super.toString());
+        if (file == null || !file.exists())
         {
-            goingToStart = true;
-            File file = getJsonFile(super.toString());
-            if (file == null || !file.exists())
-            {
-                // set currPos to startpos if it is not read from file, so that the bot travels to the startpoint and not where the player currently is
-                pd = new PathingDataRectangle(searchArea.startPos.get(), searchArea.targetPos.get(), searchArea.startPos.get(), 90, true, (int)mc.player.getZ());
-            }
-            else
-            {
-                try {
-                    FileReader reader = new FileReader(file);
-                    pd = GSON.fromJson(reader, PathingDataRectangle.class);
-                    reader.close();
-                } catch (Exception ignored) {
+            // set currPos to startpos if it is not read from file, so that the bot travels to the startpoint and not where the player currently is
+            pd = new PathingDataRectangle(searchArea.startPos.get(), searchArea.targetPos.get(), searchArea.startPos.get(), 90, true, (int)mc.player.getZ());
+        }
+        else
+        {
+            try {
+                FileReader reader = new FileReader(file);
+                pd = GSON.fromJson(reader, PathingDataRectangle.class);
+                reader.close();
+            } catch (Exception ignored) {
 
-                }
             }
         }
     }
