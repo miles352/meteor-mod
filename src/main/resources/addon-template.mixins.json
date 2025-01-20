@@ -3,6 +3,7 @@
   "package": "com.example.addon.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "LivingEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
