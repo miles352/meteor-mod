@@ -1,4 +1,4 @@
-# jeff mod (For minecraft 1.21.1)
+# jeff mod (For minecraft 1.21.1 and 1.21.4)
 
 ## Features
 - AFKBoostFly (Useless on current 2b anticheat)
@@ -9,6 +9,8 @@
   - Used alongside meteors pitch40. Auto sets min and max bounds so that you continue to gain height. Also has an auto firework mode for when you lose velocity.
 - GrimDuraFirework
   - A temporary fix for the issue on Mio client where fireworks dont work very well when using grim durability efly with the chestplate on.
+- NoJumpDelay
+  - Surprisingly most clients don't have this, but why not have it on.
 - Search Area
   - Requires some other mod to make you move.
   - Spirals you or goes in a rectangle area by changing where you look.

@@ -22,11 +22,11 @@ public class Utils
 {
 
     // returns -1 if fails, 200 if successful, and slot of chestplate if it had to swap (needed for mio grimdura)
-    public static int firework(MinecraftClient mc) {
+    public static int firework(MinecraftClient mc, boolean elytraRequired) {
 
         // cant use a rocket if not wearing an elytra
         int elytraSwapSlot = -1;
-        if (!mc.player.getInventory().getArmorStack(2).isOf(Items.ELYTRA))
+        if (elytraRequired && !mc.player.getInventory().getArmorStack(2).isOf(Items.ELYTRA))
         {
             FindItemResult itemResult = InvUtils.findInHotbar(Items.ELYTRA);
             if (!itemResult.found()) {

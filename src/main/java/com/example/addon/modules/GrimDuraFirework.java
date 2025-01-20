@@ -61,7 +61,7 @@ public class GrimDuraFirework extends Module
             if (!currentlyFiring && fireworkTickDelay <= 0)
             {
                 currentlyFiring = true;
-                int result = firework(mc);
+                int result = firework(mc, true);
                 if (result != 200 && result != -1)
                 {
                     elytraSwapSlot = result;
