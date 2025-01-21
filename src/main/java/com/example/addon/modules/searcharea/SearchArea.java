@@ -101,7 +101,7 @@ public class SearchArea extends Module {
 
 
     public SearchArea() {
-        super(Addon.CATEGORY, "Search Area", "Either loads chunks in a rectangle to a certain point from you, or spirals endlessly from you. Useful with Stash Finder or other map saving mods.");
+        super(Addon.CATEGORY, "search-area", "Either loads chunks in a rectangle to a certain point from you, or spirals endlessly from you. Useful with Stash Finder or other map saving mods.");
     }
 
     private SearchAreaMode currentMode = new Rectangle();
