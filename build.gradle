@@ -5,6 +5,7 @@ plugins {
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
+minecraft_version = project.minecraft_version
 group = project.maven_group
 
 repositories {
@@ -52,7 +53,7 @@ dependencies {
 
 processResources {
     filesMatching("fabric.mod.json") {
-        expand "version": project.version, "mc_version": project.minecraft_version
+        expand "version": project.version, "mc_version": project.property("minecraft_version"), "xp_version": project.property("xaeroplus_version")
     }
 }
 
