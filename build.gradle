@@ -27,10 +27,6 @@ repositories {
         name = "Meteor Dev Snapshots"
         url = "https://maven.meteordev.org/snapshots"
     }
-
-    flatDir {
-        dirs 'libs'
-    }
 }
 
 loom {
@@ -44,14 +40,14 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Meteor
-    modImplementation "meteordevelopment:meteor-client:1.21.4-SNAPSHOT"
+    modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
     // XaeroPlus
-    modImplementation("maven.modrinth:xaeroplus:2.25+fabric-1.21.4")
+    modImplementation "maven.modrinth:xaeroplus:${project.xaeroplus_version}"
     // lenni
-    modImplementation("net.lenni0451:LambdaEvents:2.4.2")
-    modImplementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+    modImplementation "net.lenni0451:LambdaEvents:2.4.2"
+    modImplementation "com.github.ben-manes.caffeine:caffeine:3.1.8"
 
-    modImplementation "baritone-api-fabric:baritone-api-fabric:1.11.1"
+    modCompileOnly "meteordevelopment:baritone:${project.baritone_version}"
 }
 
 processResources {
