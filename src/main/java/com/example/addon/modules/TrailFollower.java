@@ -17,21 +17,29 @@ import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.WorldChunk;
+import xaeroplus.Globals;
 import xaeroplus.XaeroPlus;
 import xaeroplus.event.ChunkDataEvent;
+import xaeroplus.feature.render.highlights.ChunkHighlightSavingCache;
 import xaeroplus.module.ModuleManager;
+import xaeroplus.module.impl.OldChunks;
 import xaeroplus.module.impl.PaletteNewChunks;
 import xaeroplus.util.ChunkScanner;
 import xaeroplus.util.ChunkUtils;
 
 import java.time.Duration;
 import java.util.ArrayDeque;
+import java.util.function.Predicate;
 
 public class TrailFollower extends Module
 {
@@ -92,6 +100,13 @@ public class TrailFollower extends Module
         .build()
     );
 
+    public final Setting<Boolean> oppositeDimension = sgGeneral.add(new BoolSetting.Builder()
+        .name("Opposite Dimension")
+        .description("Follows trails from the opposite dimension (Requires that you've already loaded the other dimension with XP).")
+        .defaultValue(false)
+        .build()
+    );
+
     public final Setting<Boolean> autoElytra = sgGeneral.add(new BoolSetting.Builder()
         .name("[Baritone] Auto Start Baritone Elytra")
         .description("Starts baritone elytra for you.")
@@ -103,9 +118,10 @@ public class TrailFollower extends Module
 
     public final Setting<Double> pathDistance = sgAdvanced.add(new DoubleSetting.Builder()
         .name("Path Distance")
-        .description("The distance to add trail positions in the direction the player is facing.")
+        .description("The distance to add trail positions in the direction the player is facing. (Ignored when following overworld from nether)")
         .defaultValue(500)
         .sliderRange(100, 2000)
+        .onChanged(value -> pathDistanceActual = value)
         .build()
     );
 
@@ -199,6 +215,8 @@ public class TrailFollower extends Module
     private long lastFoundTrailTime;
     private long lastFoundPossibleTrailTime;
 
+    private double pathDistanceActual = pathDistance.get();
+
     private Cache<Long, Byte> seenChunksCache = Caffeine.newBuilder()
         .maximumSize(chunkCacheLength.get())
         .expireAfterWrite(Duration.ofMinutes(5))
@@ -226,7 +244,23 @@ public class TrailFollower extends Module
         XaeroPlus.EVENT_BUS.register(this);
         if (mc.player != null && mc.world != null)
         {
-            if (!mc.world.getDimension().hasCeiling())
+            RegistryKey<World> currentDimension = mc.world.getRegistryKey();
+            if (oppositeDimension.get())
+            {
+                if (currentDimension.equals(World.END))
+                {
+                    info("There is no opposite dimension to the end. Disabling TrailFollower");
+                    this.toggle();
+                    return;
+                }
+                else if (currentDimension.equals(World.NETHER))
+                {
+                    info("Following overworld trails from the nether is not supported yet, sorry. Disabling TrailFollower");
+                    this.toggle();
+                    return;
+                }
+            }
+            if (!currentDimension.equals(World.NETHER))
             {
                 followMode = FollowMode.YAWLOCK;
                 info("You are in the overworld or end, basic yaw mode will be used.");
@@ -314,11 +348,7 @@ public class TrailFollower extends Module
 
     private void circle()
     {
-        if (followMode == FollowMode.BARITONE && baritoneSetGoalTicks == 0)
-        {
-            baritoneSetGoalTicks = baritoneUpdateTicks.get();
-        }
-        else if (followMode == FollowMode.BARITONE) return;
+        if (followMode == FollowMode.BARITONE) return;
         mc.player.setYaw(getActualYaw((float) (mc.player.getYaw() + circlingDegPerTick.get())));
         if (mc.player.age % 100 == 0)
         {
@@ -359,8 +389,34 @@ public class TrailFollower extends Module
                 }
                 else if (baritoneSetGoalTicks == 0)
                 {
+                    // if following overworld from nether we need to wait to set the goal until we are close to the current goal
+                    // make sure targetPos is on an actual chunk
+//                    if (mc.world.getRegistryKey().equals(World.NETHER) && oppositeDimension.get())
+//                    {
+//                        if (BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().currentDestination() != null
+//                            && !BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().currentDestination().isWithinDistance(mc.player.getPos(), 200))
+//                        {
+//                            return;
+//                        }
+//                        else
+//                        {
+//                            boolean chunkFound = false;
+//                            for (int i = 1000; i >= 0; i--)
+//                            {
+//                                Vec3d nextPosition = positionInDirection(mc.player.getPos().multiply(8), targetYaw, 16 * i);
+//                                ChunkPos nextChunkPosition = new ChunkPos(new BlockPos((int)nextPosition.x, 0, (int)nextPosition.z));
+//                                if (isValidChunk(nextChunkPosition, World.OVERWORLD))
+//                                {
+//                                    pathDistanceActual = (double) (16 * i) / 8;
+//                                    chunkFound = true;
+//                                    break;
+//                                }
+//                            }
+//                            if (!chunkFound) return;
+//                        }
+//                    }
                     baritoneSetGoalTicks = baritoneUpdateTicks.get();
-                    Vec3d targetPos = positionInDirection(mc.player.getPos(), targetYaw, pathDistance.get());
+                    Vec3d targetPos = positionInDirection(mc.player.getPos(), targetYaw, pathDistanceActual);
                     BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalXZ((int) targetPos.x, (int) targetPos.z));
                     if (autoElytra.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().currentDestination() == null)
                     {
@@ -393,121 +449,156 @@ public class TrailFollower extends Module
         if (posDebug != null) event.renderer.line(mc.player.getX(), mc.player.getY(), mc.player.getZ(), posDebug.x, targetPos.y, posDebug.z, new Color(0, 0, 255));
     }
 
-
-
     @net.lenni0451.lambdaevents.EventHandler(priority = -1)
     public void onChunkData(ChunkDataEvent event)
     {
+        if (event.seenChunk()) return;
+        RegistryKey<World> currentDimension = mc.world.getRegistryKey();
         WorldChunk chunk = event.chunk();
-        long chunkLong = chunk.getPos().toLong();
+        ChunkPos chunkPos = chunk.getPos();
+        long chunkLong = chunkPos.toLong();
 
         // if found in the cache then ignore the chunk
         if (seenChunksCache.getIfPresent(chunkLong) != null) return;
 
-        seenChunksCache.put(chunkLong, Byte.MAX_VALUE);
-        boolean is119NewChunk = ModuleManager.getModule(PaletteNewChunks.class)
-            .isNewChunk(
-                chunk.getPos().x,
-                chunk.getPos().z,
-                chunk.getWorld().getRegistryKey()
-            );
 
-        // TODO: Find a better way to do this bc Xaero is already checking the chunk
-        boolean is112OldChunk = false;
-        ReferenceSet<Block> OVERWORLD_BLOCKS = ReferenceOpenHashSet.of(new Block[]{Blocks.COPPER_ORE, Blocks.DEEPSLATE_COPPER_ORE, Blocks.AMETHYST_BLOCK, Blocks.SMOOTH_BASALT, Blocks.TUFF, Blocks.KELP, Blocks.KELP_PLANT, Blocks.POINTED_DRIPSTONE, Blocks.DRIPSTONE_BLOCK, Blocks.DEEPSLATE, Blocks.AZALEA, Blocks.BIG_DRIPLEAF, Blocks.BIG_DRIPLEAF_STEM, Blocks.SMALL_DRIPLEAF, Blocks.MOSS_BLOCK, Blocks.CAVE_VINES, Blocks.CAVE_VINES_PLANT});
-        ReferenceSet<Block> NETHER_BLOCKS = ReferenceOpenHashSet.of(new Block[]{Blocks.ANCIENT_DEBRIS, Blocks.BLACKSTONE, Blocks.BASALT, Blocks.CRIMSON_NYLIUM, Blocks.WARPED_NYLIUM, Blocks.NETHER_GOLD_ORE, Blocks.CHAIN});
-        // In the end
-        if (!mc.world.getDimension().hasCeiling() && !mc.world.getDimension().bedWorks())
+
+        ChunkPos chunkDelta = new ChunkPos(chunkPos.x - mc.player.getChunkPos().x, chunkPos.z - mc.player.getChunkPos().z);
+
+        if (oppositeDimension.get())
         {
-            RegistryEntry<Biome> biomeHolder = this.mc.world.getBiome(new BlockPos(ChunkUtils.chunkCoordToCoord(chunk.getPos().x) + 8, 64, ChunkUtils.chunkCoordToCoord(chunk.getPos().z) + 8));
-            if (biomeHolder.getKey().filter((biome) -> biome.equals(BiomeKeys.THE_END)).isPresent()) is112OldChunk = true;
-        }
-        else
-        {
-            // Not in the end
-            is112OldChunk = !ChunkScanner.chunkContainsBlocks(chunk, !mc.world.getDimension().hasCeiling() ? OVERWORLD_BLOCKS : NETHER_BLOCKS, 5);
+            if (currentDimension.equals(World.OVERWORLD))
+            {
+                chunkPos = new ChunkPos(mc.player.getChunkPos().x / 8 + chunkDelta.x, mc.player.getChunkPos().z / 8 + chunkDelta.z);
+                currentDimension = World.NETHER;
+            }
+            else if (currentDimension.equals(World.NETHER))
+            {
+                chunkPos = new ChunkPos(mc.player.getChunkPos().x * 8 + chunkDelta.x, mc.player.getChunkPos().z * 8 + chunkDelta.z);
+//                info("ChunkPos: " + chunkPos.x + ", " + chunkPos.z);
+                currentDimension = World.OVERWORLD;
+            }
         }
 
         // TODO: Add options for following certain types of chunks.
+        // Check that the chunk is actually mapped, and that it is an old chunk
+        if (!isValidChunk(chunkPos, currentDimension)) return;
 
-        if (!is119NewChunk || is112OldChunk)
+        seenChunksCache.put(chunkLong, Byte.MAX_VALUE);
+
+        // nether will get out of chunk render distance range of overworld. needs fix.
+        // possible fix:
+        // make sure baritone markers are on the trail, only look for new chunks when player is near the waypoint
+
+
+        // TODO: Update to require newest XP version that will work with normal isNewChunk calls
+        // "all the SavableHighlightCacheInstance are public fields in the modules now
+        //
+        // you can just do cache.get().isHighlighted for any"
+
+
+        // use chunk.getPos() here instead of the dimension specific chunkPos because we have to path to blocks in our dimension
+        Vec3d pos = chunk.getPos().getCenterAtY(0).toCenterPos();
+        posDebug = pos;
+
+        if (!followingTrail)
         {
-            Vec3d pos = chunk.getPos().getCenterAtY(0).toCenterPos();
-            posDebug = pos;
-
-            if (!followingTrail)
+            if (System.currentTimeMillis() - lastFoundPossibleTrailTime > chunkConsiderationWindow.get() * 1000)
             {
-                if (System.currentTimeMillis() - lastFoundPossibleTrailTime > chunkConsiderationWindow.get() * 1000)
-                {
-                    possibleTrail.clear();
-                }
-                possibleTrail.add(pos);
-                lastFoundPossibleTrailTime = System.currentTimeMillis();
-                if (possibleTrail.size() > chunksBeforeStarting.get())
-                {
-                    followingTrail = true;
-                    lastFoundTrailTime = System.currentTimeMillis();
-                    trail.addAll(possibleTrail);
-                    possibleTrail.clear();
-                }
-                return;
+                possibleTrail.clear();
             }
+            possibleTrail.add(pos);
+            lastFoundPossibleTrailTime = System.currentTimeMillis();
+            if (possibleTrail.size() > chunksBeforeStarting.get())
+            {
+                info("Trail found, starting to follow.");
+                followingTrail = true;
+                lastFoundTrailTime = System.currentTimeMillis();
+                trail.addAll(possibleTrail);
+                possibleTrail.clear();
+            }
+            return;
+        }
 
 
-            // add chunks to the list
+        // add chunks to the list
 
-            double chunkAngle = Rotations.getYaw(pos);
-            double angleDiff = angleDifference(targetYaw, chunkAngle);
+        double chunkAngle = Rotations.getYaw(pos);
+        double angleDiff = angleDifference(targetYaw, chunkAngle);
 
-            // Ignore chunks not in the direction of the target
-            // This shouldn't be needed assuming the chunk cache works
-//            if (Math.abs(angleDiff) > 90)
-//            {
-//                info("Greater than 90!");
-//                return;
-//            }
-            lastFoundTrailTime = System.currentTimeMillis();
+//        if (Math.abs(angleDiff) > 90)
+//        {
+//            return;
+//        }
 
-            // free up one spot for a new chunk to be added
-            while(trail.size() >= maxTrailLength.get())
+        lastFoundTrailTime = System.currentTimeMillis();
+
+        // free up one spot for a new chunk to be added
+        while(trail.size() >= maxTrailLength.get())
+        {
+            trail.pollFirst();
+        }
+
+        if (angleDiff > 0 && angleDiff < 90 && directionWeighting.get() == DirectionWeighting.LEFT)
+        {
+            // add extra chunks to increase the weighting
+            // TODO: Maybe redo this to use a map of chunk pos to weights
+            for (int i = 0; i < directionWeightingMultiplier.get() - 1; i++)
             {
                 trail.pollFirst();
-            }
-
-            if (angleDiff > 0 && angleDiff < 90 && directionWeighting.get() == DirectionWeighting.LEFT)
-            {
-                // add extra chunks to increase the weighting
-                // TODO: Maybe redo this to use a map of chunk pos to weights
-                for (int i = 0; i < directionWeightingMultiplier.get() - 1; i++)
-                {
-                    trail.pollFirst();
-                    trail.add(pos);
-                }
                 trail.add(pos);
             }
-            else if (angleDiff < 0 && angleDiff > -90 && directionWeighting.get() == DirectionWeighting.RIGHT)
-            {
-                for (int i = 0; i < directionWeightingMultiplier.get() - 1; i++)
-                {
-                    trail.pollFirst();
-                    trail.add(pos);
-                }
-                trail.add(pos);
-            }
-            else
-            {
-                trail.add(pos);
-            }
-
-
-            // get average pos
-            Vec3d averagePos = calculateAveragePosition(trail);
-
-            Vec3d positionVec = averagePos.subtract(mc.player.getPos()).normalize();
-
-            Vec3d targetPos = mc.player.getPos().add(positionVec.multiply(pathDistance.get()));
-            targetYaw = Rotations.getYaw(targetPos);
+            trail.add(pos);
         }
+        else if (angleDiff < 0 && angleDiff > -90 && directionWeighting.get() == DirectionWeighting.RIGHT)
+        {
+            for (int i = 0; i < directionWeightingMultiplier.get() - 1; i++)
+            {
+                trail.pollFirst();
+                trail.add(pos);
+            }
+            trail.add(pos);
+        }
+        else
+        {
+            trail.add(pos);
+        }
+
+
+        // get average pos
+        Vec3d averagePos = calculateAveragePosition(trail);
+
+        Vec3d positionVec = averagePos.subtract(mc.player.getPos()).normalize();
+
+        Vec3d targetPos = mc.player.getPos().add(positionVec.multiply(10));
+        targetYaw = Rotations.getYaw(targetPos);
+    }
+
+    private boolean isValidChunk(ChunkPos chunkPos, RegistryKey<World> currentDimension)
+    {
+        PaletteNewChunks paletteNewChunks = ModuleManager.getModule(PaletteNewChunks.class);
+        boolean is119NewChunk = paletteNewChunks
+            .isNewChunk(
+                chunkPos.x,
+                chunkPos.z,
+                currentDimension
+            );
+
+        boolean is112OldChunk = ModuleManager.getModule(OldChunks.class)
+            .isOldChunk(
+                chunkPos.x,
+                chunkPos.z,
+                currentDimension
+            );
+
+        boolean isHighlighted = is119NewChunk || paletteNewChunks
+            .isInverseNewChunk(
+                chunkPos.x,
+                chunkPos.z,
+                currentDimension
+            );
+
+        return isHighlighted && (!is119NewChunk || is112OldChunk);
     }
 
     private Vec3d calculateAveragePosition(ArrayDeque<Vec3d> positions)
