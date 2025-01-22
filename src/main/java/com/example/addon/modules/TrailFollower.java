@@ -43,6 +43,8 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.function.Predicate;
 
+import static com.example.addon.Utils.sendWebhook;
+
 public class TrailFollower extends Module
 {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -197,6 +199,13 @@ public class TrailFollower extends Module
         .build()
     );
 
+    public final Setting<String> webhookLink = sgGeneral.add(new StringSetting.Builder()
+        .name("Webhook Link")
+        .description("Will send all updates to the webhook link. Leave blank to disable.")
+        .defaultValue("")
+        .build()
+    );
+
     public final Setting<Integer> baritoneUpdateTicks = sgAdvanced.add(new IntSetting.Builder()
         .name("[Baritone] Baritone Path Update Ticks")
         .description("The amount of ticks between updates to the baritone goal. Low values may cause high instability.")
@@ -260,13 +269,13 @@ public class TrailFollower extends Module
             {
                 if (currentDimension.equals(World.END))
                 {
-                    info("There is no opposite dimension to the end. Disabling TrailFollower");
+                    log("There is no opposite dimension to the end. Disabling TrailFollower");
                     this.toggle();
                     return;
                 }
                 else if (currentDimension.equals(World.NETHER))
                 {
-                    info("Following overworld trails from the nether is not supported yet, sorry. Disabling TrailFollower");
+                    log("Following overworld trails from the nether is not supported yet, sorry. Disabling TrailFollower");
                     this.toggle();
                     return;
                 }
@@ -274,16 +283,16 @@ public class TrailFollower extends Module
             if (!currentDimension.equals(World.NETHER))
             {
                 followMode = FollowMode.YAWLOCK;
-                info("You are in the overworld or end, basic yaw mode will be used.");
+                log("You are in the overworld or end, basic yaw mode will be used.");
             }
             else
             {
                 try {
                     Class.forName("baritone.api.BaritoneAPI");
                     followMode = FollowMode.BARITONE;
-                    info("You are in the nether, baritone mode will be used.");
+                    log("You are in the nether, baritone mode will be used.");
                 } catch (ClassNotFoundException e) {
-                    info("Baritone is required to trail follow in the nether. Disabling TrailFollower");
+                    log("Baritone is required to trail follow in the nether. Disabling TrailFollower");
                     this.toggle();
                     return;
                 }
@@ -300,7 +309,7 @@ public class TrailFollower extends Module
                     if (pitch40Firework.get())
                     {
                         Setting<Boolean> setting = ((Setting<Boolean>)pitch40UtilModule.settings.get("Auto Firework"));
-                        info("Auto Firework enabled, if you want to change the velocity threshold or the firework cooldown check the settings under Pitch40Util.");
+                        log("Auto Firework enabled, if you want to change the velocity threshold or the firework cooldown check the settings under Pitch40Util.");
                         oldAutoFireworkValue = setting.get();
                         setting.set(true);
                     }
@@ -363,7 +372,7 @@ public class TrailFollower extends Module
         mc.player.setYaw(getActualYaw((float) (mc.player.getYaw() + circlingDegPerTick.get())));
         if (mc.player.age % 100 == 0)
         {
-            info("Circling to look for new chunks, abandoning trail in " + (trailTimeout.get() - (System.currentTimeMillis() - lastFoundTrailTime)) / 1000 + " seconds.");
+            log("Circling to look for new chunks, abandoning trail in " + (trailTimeout.get() - (System.currentTimeMillis() - lastFoundTrailTime)) / 1000 + " seconds.");
         }
     }
 
@@ -374,7 +383,7 @@ public class TrailFollower extends Module
         if (followingTrail && System.currentTimeMillis() - lastFoundTrailTime > trailTimeout.get())
         {
             resetTrail();
-            info("Trail timed out, stopping.");
+            log("Trail timed out, stopping.");
             // TODO: Add options for what to do next
             switch (trailEndBehavior.get())
             {
@@ -442,7 +451,7 @@ public class TrailFollower extends Module
                     if (autoElytra.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().currentDestination() == null)
                     {
                         // TODO: Fix this
-                        info("The auto elytra mode is broken right now. If it's not working just turn it off and manually use #elytra to start.");
+                        log("The auto elytra mode is broken right now. If it's not working just turn it off and manually use #elytra to start.");
                         BaritoneAPI.getSettings().elytraTermsAccepted.value = true;
                         BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("elytra");
                     }
@@ -496,7 +505,7 @@ public class TrailFollower extends Module
             else if (currentDimension.equals(World.NETHER))
             {
                 chunkPos = new ChunkPos(mc.player.getChunkPos().x * 8 + chunkDelta.x, mc.player.getChunkPos().z * 8 + chunkDelta.z);
-//                info("ChunkPos: " + chunkPos.x + ", " + chunkPos.z);
+//                log("ChunkPos: " + chunkPos.x + ", " + chunkPos.z);
                 currentDimension = World.OVERWORLD;
             }
         }
@@ -532,7 +541,7 @@ public class TrailFollower extends Module
             lastFoundPossibleTrailTime = System.currentTimeMillis();
             if (possibleTrail.size() > chunksBeforeStarting.get())
             {
-                info("Trail found, starting to follow.");
+                log("Trail found, starting to follow.");
                 followingTrail = true;
                 lastFoundTrailTime = System.currentTimeMillis();
                 trail.addAll(possibleTrail);
@@ -653,6 +662,15 @@ public class TrailFollower extends Module
     {
         Vec3d offset = (new Vec3d(Math.sin(-yaw * Math.PI / 180), 0, Math.cos(-yaw * Math.PI / 180)).normalize()).multiply(distance);
         return pos.add(offset);
+    }
+
+    private void log(String message)
+    {
+        info(message);
+        if (!webhookLink.get().isEmpty())
+        {
+            sendWebhook(webhookLink.get(), "TrailFollower", message, null, mc.player.getGameProfile().getName());
+        }
     }
 
     private enum FollowMode
