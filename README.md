@@ -1,5 +1,5 @@
 # jeff mod (For minecraft 1.21.1 and 1.21.4)
-
+#### Make an issue or DM me on discord `0x658` with any questions
 ## Features
 - AFKBoostFly (Useless on current 2b anticheat)
   - Makes you look up and down to gain momentum.
@@ -11,6 +11,8 @@
   - A temporary fix for the issue on Mio client where fireworks dont work very well when using grim durability efly with the chestplate on.
 - NoJumpDelay
   - Surprisingly most clients don't have this, but why not have it on.
+- GrimAirPlace
+  - Meteor's airplace code but with a grim bypass.
 - Search Area
   - Requires some other mod to make you move.
   - Spirals you or goes in a rectangle area by changing where you look.
