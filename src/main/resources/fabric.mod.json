@@ -27,6 +27,7 @@
   "depends": {
     "java": ">=21",
     "minecraft": ">=${mc_version}",
-    "meteor-client": "*"
+    "meteor-client": "*",
+    "xaeroplus": ">=${xp_version}"
   }
 }
