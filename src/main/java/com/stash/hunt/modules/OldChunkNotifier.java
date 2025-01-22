@@ -1,19 +1,15 @@
-package com.example.addon.modules;
+package com.stash.hunt.modules;
 
-import com.example.addon.Addon;
-import meteordevelopment.meteorclient.events.world.TickEvent;
+import com.stash.hunt.Addon;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
-import meteordevelopment.orbit.EventHandler;
-import net.minecraft.text.Text;
 import xaeroplus.XaeroPlus;
 import xaeroplus.event.ChunkDataEvent;
 import xaeroplus.module.ModuleManager;
 import xaeroplus.module.impl.OldChunks;
 import xaeroplus.module.impl.PaletteNewChunks;
 
-import static com.example.addon.Utils.sendWebhook;
+import static com.stash.hunt.Utils.sendWebhook;
 
 
 public class OldChunkNotifier extends Module {

@@ -1,7 +1,6 @@
-package com.example.addon.modules;
+package com.stash.hunt.modules;
 
-import com.example.addon.Addon;
-import com.example.addon.modules.searcharea.SearchArea;
+import com.stash.hunt.Addon;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -19,7 +18,7 @@ import net.minecraft.util.math.BlockPos;
 import java.io.*;
 import java.util.ArrayList;
 
-import static com.example.addon.Utils.sendWebhook;
+import static com.stash.hunt.Utils.sendWebhook;
 import static java.lang.System.currentTimeMillis;
 
 public class FollowBaritonePath extends Module

@@ -1,6 +1,6 @@
-package com.example.addon.modules;
+package com.stash.hunt.modules;
 
-import com.example.addon.Addon;
+import com.stash.hunt.Addon;
 import meteordevelopment.meteorclient.systems.modules.Module;
 
 public class NoJumpDelay extends Module

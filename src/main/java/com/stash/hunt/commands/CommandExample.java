@@ -1,4 +1,4 @@
-package com.example.addon.commands;
+package com.stash.hunt.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import meteordevelopment.meteorclient.commands.Command;

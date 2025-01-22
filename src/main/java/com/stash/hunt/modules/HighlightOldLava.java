@@ -1,6 +1,6 @@
-package com.example.addon.modules;
+package com.stash.hunt.modules;
 
-import com.example.addon.Addon;
+import com.stash.hunt.Addon;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -32,7 +32,7 @@ import net.minecraft.world.chunk.Chunk;
 import java.io.*;
 import java.util.HashSet;
 
-import static com.example.addon.Utils.sendWebhook;
+import static com.stash.hunt.Utils.sendWebhook;
 
 
 public class HighlightOldLava extends Module

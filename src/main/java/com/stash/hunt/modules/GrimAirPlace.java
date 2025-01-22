@@ -1,6 +1,6 @@
-package com.example.addon.modules;
+package com.stash.hunt.modules;
 
-import com.example.addon.Addon;
+import com.stash.hunt.Addon;
 import net.minecraft.item.SpawnEggItem;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;

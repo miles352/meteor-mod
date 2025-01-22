@@ -1,8 +1,8 @@
-package com.example.addon;
+package com.stash.hunt;
 
-import com.example.addon.hud.Weather;
-import com.example.addon.modules.*;
-import com.example.addon.modules.searcharea.SearchArea;
+import com.stash.hunt.hud.Weather;
+import com.stash.hunt.modules.*;
+import com.stash.hunt.modules.searcharea.SearchArea;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.settings.Settings;

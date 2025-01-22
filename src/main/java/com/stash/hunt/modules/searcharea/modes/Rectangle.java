@@ -1,7 +1,7 @@
-package com.example.addon.modules.searcharea.modes;
+package com.stash.hunt.modules.searcharea.modes;
 
-import com.example.addon.modules.searcharea.SearchAreaMode;
-import com.example.addon.modules.searcharea.SearchAreaModes;
+import com.stash.hunt.modules.searcharea.SearchAreaMode;
+import com.stash.hunt.modules.searcharea.SearchAreaModes;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.misc.AutoReconnect;
@@ -14,7 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import java.io.*;
 
 import static meteordevelopment.meteorclient.utils.player.ChatUtils.info;
-import static com.example.addon.Utils.*;
+import static com.stash.hunt.Utils.*;
 
 public class Rectangle extends SearchAreaMode
 {

@@ -1,17 +1,14 @@
-package com.example.addon.hud;
+package com.stash.hunt.hud;
 
-import com.example.addon.Addon;
+import com.stash.hunt.Addon;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
-import meteordevelopment.meteorclient.systems.hud.Alignment;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import net.minecraft.client.MinecraftClient;
-
-import static meteordevelopment.meteorclient.utils.player.ChatUtils.info;
 
 
 public class Weather extends HudElement {

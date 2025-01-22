@@ -1,8 +1,8 @@
-package com.example.addon.modules.searcharea;
+package com.stash.hunt.modules.searcharea;
 
-import com.example.addon.Addon;
-import com.example.addon.modules.searcharea.modes.Rectangle;
-import com.example.addon.modules.searcharea.modes.Spiral;
+import com.stash.hunt.Addon;
+import com.stash.hunt.modules.searcharea.modes.Rectangle;
+import com.stash.hunt.modules.searcharea.modes.Spiral;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;

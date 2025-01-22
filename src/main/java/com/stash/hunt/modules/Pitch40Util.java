@@ -1,23 +1,16 @@
-package com.example.addon.modules;
+package com.stash.hunt.modules;
 
-import com.example.addon.Addon;
+import com.stash.hunt.Addon;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFly;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
-import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 
-import static meteordevelopment.meteorclient.utils.Utils.rightClick;
-import static com.example.addon.Utils.firework;
+import static com.stash.hunt.Utils.firework;
 
 
 public class Pitch40Util extends Module {
@@ -125,6 +118,8 @@ public class Pitch40Util extends Module {
             // -40 pitch is facing upwards
             if (mc.player.getPitch() == -40)
             {
+//                info("Velocity less than target: " + (mc.player.getVelocity().y < velocityThreshold.get()));
+//                info("Y less than upper bounds: " + (mc.player.getY() < (double)elytraFlyModule.settings.get("pitch40-upper-bounds").get()));
                 goingUp = true;
                 if (autoFirework.get() && mc.player.getVelocity().y < velocityThreshold.get() && mc.player.getY() < (double)elytraFlyModule.settings.get("pitch40-upper-bounds").get())
                 {

@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "com.example.addon.mixin",
+  "package": "com.stash.hunt.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
     "LivingEntityMixin"

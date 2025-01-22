@@ -1,18 +1,17 @@
-package com.example.addon.modules.searcharea;
+package com.stash.hunt.modules.searcharea;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.utils.Utils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
-import static com.example.addon.Utils.*;
+import static com.stash.hunt.Utils.*;
 import java.io.*;
 
-import static com.example.addon.Utils.sendWebhook;
+import static com.stash.hunt.Utils.sendWebhook;
 
 public class SearchAreaMode
 {
