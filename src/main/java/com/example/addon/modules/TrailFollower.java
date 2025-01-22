@@ -17,8 +17,10 @@ import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
@@ -386,6 +388,11 @@ public class TrailFollower extends Module
                     targetYaw = trailEndYaw.get();
                     break;
                 }
+                case DISCONNECT:
+                {
+                    mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[TrailFollower] Trail timed out.")));
+                    break;
+                }
             }
         }
         if (followingTrail && System.currentTimeMillis() - lastFoundTrailTime > chunkFoundTimeout.get())
@@ -664,7 +671,8 @@ public class TrailFollower extends Module
     public enum TrailEndBehavior
     {
         DISABLE,
-        FLY_TOWARDS_YAW
+        FLY_TOWARDS_YAW,
+        DISCONNECT
     }
 
 }
