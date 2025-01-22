@@ -16,7 +16,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 
-public class AirPlace extends Module {
+public class GrimAirPlace extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRange = settings.createGroup("Range");
 
@@ -61,18 +61,19 @@ public class AirPlace extends Module {
         .visible(customRange::get)
         .defaultValue(5)
         .min(0)
-        .sliderMax(6)
+        .sliderMax(5.5)
         .build()
     );
 
     private HitResult hitResult;
 
-    public AirPlace() {
+    public GrimAirPlace() {
         super(Addon.CATEGORY, "grim-air-place", "Places a block where your crosshair is pointing at.");
     }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
+        if (mc.player == null) return;
         double r = customRange.get() ? range.get() : mc.player.getBlockInteractionRange();
         hitResult = mc.getCameraEntity().raycast(r, 0, false);
 
