@@ -77,6 +77,15 @@ public class TrailFollower extends Module
         .build()
     );
 
+    public final Setting<Double> trailEndYaw = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Trail End Yaw")
+        .description("The direction to go after the trail is abandoned.")
+        .defaultValue(0.0)
+        .sliderRange(0.0, 359.9)
+        .visible(() -> trailEndBehavior.get() == TrailEndBehavior.FLY_TOWARDS_YAW)
+        .build()
+    );
+
     public final Setting<Boolean> pitch40 = sgGeneral.add(new BoolSetting.Builder()
         .name("Auto Pitch 40")
         .description("Incorporates pitch 40 into the follower.")
@@ -372,6 +381,11 @@ public class TrailFollower extends Module
                     this.toggle();
                     break;
                 }
+                case FLY_TOWARDS_YAW:
+                {
+                    targetYaw = trailEndYaw.get();
+                    break;
+                }
             }
         }
         if (followingTrail && System.currentTimeMillis() - lastFoundTrailTime > chunkFoundTimeout.get())
@@ -650,6 +664,7 @@ public class TrailFollower extends Module
     public enum TrailEndBehavior
     {
         DISABLE,
+        FLY_TOWARDS_YAW
     }
 
 }
