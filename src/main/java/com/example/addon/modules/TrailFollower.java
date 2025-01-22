@@ -521,12 +521,6 @@ public class TrailFollower extends Module
         // make sure baritone markers are on the trail, only look for new chunks when player is near the waypoint
 
 
-        // TODO: Update to require newest XP version that will work with normal isNewChunk calls
-        // "all the SavableHighlightCacheInstance are public fields in the modules now
-        //
-        // you can just do cache.get().isHighlighted for any"
-
-
         // use chunk.getPos() here instead of the dimension specific chunkPos because we have to path to blocks in our dimension
         Vec3d pos = chunk.getPos().getCenterAtY(0).toCenterPos();
         posDebug = pos;
