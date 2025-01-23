@@ -5,6 +5,8 @@
   - Makes you look up and down to gain momentum.
 - TrailFollower (Requires XaeroPlus)
   - Follows trails in all dimensions using either pitch40 or baritone. May break on path splits or other cases.
+- DiscordNotifs
+  - Logs different things to a discord webhook.
 - Pitch40Util
   - Used alongside meteors pitch40. Auto sets min and max bounds so that you continue to gain height. Also has an auto firework mode for when you lose velocity.
 - GrimDuraFirework
@@ -20,8 +22,6 @@
   - Disconnects you if you go below a certain Y value.
 - ChestIndex
   - Automatically opens chests in range and collects a list of every item inside. They can then be printed to the chat in different ways. You can also save them to a JSON file.
-- FollowBaritonePath (WIP)
-  -	Sort of works, but I would not recommend rn.
 - GotoPosition
   - Looks at the position specified and holds w.
 - HighlightOldLava
