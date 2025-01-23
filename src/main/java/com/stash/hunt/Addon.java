@@ -43,6 +43,7 @@ public class Addon extends MeteorAddon {
 //        Modules.get().add(new GrimEfly());
         Modules.get().add(new NoJumpDelay());
         Modules.get().add(new GrimAirPlace());
+        Modules.get().add(new DiscordNotifs());
 
         if (FabricLoader.getInstance().isModLoaded("xaeroplus"))
         {

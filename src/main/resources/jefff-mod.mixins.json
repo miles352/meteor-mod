@@ -3,7 +3,7 @@
   "package": "com.stash.hunt.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "LivingEntityMixin"
+    "MessageHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
