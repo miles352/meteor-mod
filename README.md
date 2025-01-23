@@ -5,6 +5,8 @@
   - Makes you look up and down to gain momentum.
 - TrailFollower (Requires XaeroPlus)
   - Follows trails in all dimensions using either pitch40 or baritone. May break on path splits or other cases.
+- OldChunkNotifier
+  - Sends a message to a discord webhook when old chunks are found.
 - DiscordNotifs
   - Logs different things to a discord webhook.
 - Pitch40Util
