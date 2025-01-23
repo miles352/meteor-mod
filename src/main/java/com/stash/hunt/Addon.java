@@ -27,14 +27,11 @@ public class Addon extends MeteorAddon {
         // Modules
         Modules.get().add(new SearchArea());
         Modules.get().add(new AutoLogY());
-        Modules.get().add(new AutoJoinServer());
         Modules.get().add(new GotoPosition());
         Modules.get().add(new ChestIndex());
-        Modules.get().add(new LookAt());
         Modules.get().add(new HighlightOldLava());
-        Modules.get().add(new FollowBaritonePath());
+//        Modules.get().add(new FollowBaritonePath());
         Modules.get().add(new AFKBoostFly());
-        Modules.get().add(new ChatCoordSpammer());
         Modules.get().add(new Pitch40Util());
 //        Modules.get().add(new AutoTrade());
 //        Modules.get().add(new XPBot());

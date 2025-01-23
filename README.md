@@ -16,8 +16,6 @@
 - Search Area
   - Requires some other mod to make you move.
   - Spirals you or goes in a rectangle area by changing where you look.
-- AutoJoinServer
-  - Automatically joins a server when you launch minecraft.
 - AutoLogY
   - Disconnects you if you go below a certain Y value.
 - ChestIndex
@@ -28,7 +26,3 @@
   - Looks at the position specified and holds w.
 - HighlightOldLava
   - Highlights lava that is of a certain height. This used to be helpful for tracing paths in the nether but with new pallete newchunks its not really useful.
-- LookAt
-  - Kind of a joke module, it just locks your rotation to the nearest player.
-- ChatCoordSpammer
-  - Sends your position in chat every x seconds. Could be fun to see if people come kill you.
