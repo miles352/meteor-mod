@@ -1,11 +1,11 @@
-package com.example.addon.mixin;
+package com.stash.hunt.mixin;
 
 import net.minecraft.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.jetbrains.annotations.Nullable;
-import com.example.addon.modules.NoJumpDelay;
+import com.stash.hunt.modules.NoJumpDelay;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import meteordevelopment.meteorclient.systems.modules.Modules;
