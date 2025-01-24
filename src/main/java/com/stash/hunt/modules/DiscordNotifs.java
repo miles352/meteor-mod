@@ -182,11 +182,6 @@ public class DiscordNotifs extends Module
     public void handleMessage(String message, MessageType messageType)
     {
         if (webhookURL.get().isBlank()) return;
-        if (delayTimer > 0)
-        {
-            if (queueMessages.get()) messageQueue.offer(message);
-            return;
-        }
 
         if (logAll.get())
         {
@@ -200,13 +195,12 @@ public class DiscordNotifs extends Module
         {
             sendWebhookMessage(message);
         }
-        else if (whisper.get())
+        else if (whisper.get()
+            && !message.startsWith("<")
+            && message.contains("whispers: ") // from player
+            || message.startsWith("to ")) // to player
         {
-            if (!message.startsWith("<") && message.contains("whispers: ") // from player
-                || message.startsWith("to ")) // to player
-            {
-                sendWebhookMessage(message);
-            }
+            sendWebhookMessage(message);
         }
         else if (chat.get() && message.startsWith("<"))
         {
@@ -244,6 +238,11 @@ public class DiscordNotifs extends Module
 
     private void sendWebhookMessage(String message)
     {
+        if (delayTimer > 0)
+        {
+            if (queueMessages.get()) messageQueue.offer(message);
+            return;
+        }
         delayTimer = delay.get() / 1000 * 20;
         if (timestamp.get())
         {
