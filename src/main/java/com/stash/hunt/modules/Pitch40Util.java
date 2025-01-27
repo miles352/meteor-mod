@@ -17,9 +17,16 @@ public class Pitch40Util extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    public final Setting<Boolean> autoBoundAdjust = sgGeneral.add(new BoolSetting.Builder()
+        .name("Auto Adjust Bounds")
+        .description("Adjusts your bounds to make you continue to gain height. Good for fixing falling on reconnect or lag, etc.")
+        .defaultValue(true)
+        .build()
+    );
+
     public final Setting<Double> boundGap = sgGeneral.add(new DoubleSetting.Builder()
         .name("Bound Gap")
-        .description("The gap between the upper and lower bounds.")
+        .description("The gap between the upper and lower bounds. Used when reconnecting, or when at max height if Auto Adjust Bounds is enabled.")
         .defaultValue(60)
         .build()
     );
@@ -51,6 +58,7 @@ public class Pitch40Util extends Module {
         .name("Require Elytra")
         .description("Swaps to elytra before rocketing, fixes issues on mio grim dura.")
         .defaultValue(false)
+        .visible(autoFirework::get)
         .build()
     );
 
@@ -109,7 +117,7 @@ public class Pitch40Util extends Module {
             }
 
             // this means the player fell below the lower bound, so we reset the bounds. this will only really happen if not using fireworks
-            if (mc.player.getY() <= (double)elytraFlyModule.settings.get("pitch40-lower-bounds").get() - 10)
+            if (autoBoundAdjust.get() && mc.player.getY() <= (double)elytraFlyModule.settings.get("pitch40-lower-bounds").get() - 10)
             {
                 resetBounds();
                 return;
@@ -137,7 +145,7 @@ public class Pitch40Util extends Module {
                 }
             }
             // waits until your at the highest point, when y velocity is 0, then sets min and max bounds based on your position
-            else if (goingUp && mc.player.getVelocity().y <= 0) {
+            else if (autoBoundAdjust.get() && goingUp && mc.player.getVelocity().y <= 0) {
                 goingUp = false;
                 resetBounds();
             }
@@ -148,6 +156,7 @@ public class Pitch40Util extends Module {
             if (!mc.player.getAbilities().allowFlying)
             {
                 elytraFlyModule.toggle();
+                // always reset when rejoining
                 resetBounds();
             }
         }
