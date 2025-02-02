@@ -20,6 +20,13 @@ public class GrimAirPlace extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRange = settings.createGroup("Range");
 
+    private final Setting<Integer> placeDelay = sgGeneral.add(new IntSetting.Builder()
+        .name("Place Delay")
+        .description("The delay in ticks between block placements.")
+        .defaultValue(0)
+        .build()
+    );
+
     private final Setting<Boolean> render = sgGeneral.add(new BoolSetting.Builder()
         .name("render")
         .description("Renders a block overlay where the obsidian will be placed.")
@@ -66,18 +73,28 @@ public class GrimAirPlace extends Module {
     );
 
     private HitResult hitResult;
+    private int delay = 0;
 
     public GrimAirPlace() {
         super(Addon.CATEGORY, "grim-air-place", "Places a block where your crosshair is pointing at.");
     }
 
+    @Override
+    public void onActivate()
+    {
+        delay = 0;
+    }
+
     @EventHandler
     private void onTick(TickEvent.Post event) {
         if (mc.player == null) return;
+        delay++;
         double r = customRange.get() ? range.get() : mc.player.getBlockInteractionRange();
         hitResult = mc.getCameraEntity().raycast(r, 0, false);
 
         if (!(hitResult instanceof BlockHitResult blockHitResult) || !(mc.player.getMainHandStack().getItem() instanceof BlockItem) && !(mc.player.getMainHandStack().getItem() instanceof SpawnEggItem)) return;
+
+        if (delay < placeDelay.get()) return;
 
         if (mc.options.useKey.isPressed()) {
             mc.player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, mc.player.currentScreenHandler.getRevision(), mc.player.getYaw(), mc.player.getPitch()));
@@ -93,6 +110,7 @@ public class GrimAirPlace extends Module {
             mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, new BlockPos(0,0,0), blockHitResult.getSide()));
 
             mc.player.swingHand(Hand.MAIN_HAND);
+            delay = 0;
         }
     }
 
