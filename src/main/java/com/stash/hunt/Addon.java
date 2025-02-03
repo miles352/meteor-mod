@@ -51,6 +51,9 @@ public class Addon extends MeteorAddon {
         {
             LOG.info("XaeroPlus not found, disabling TrailFollower and OldChunkNotifier");
         }
+        Modules.get().add(new BetterStashFinder());
+        Modules.get().add(new TrailFollower());
+        Modules.get().add(new OldChunkNotifier());
 
 
         // Commands
