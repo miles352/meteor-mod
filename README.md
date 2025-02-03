@@ -5,6 +5,11 @@
   - Makes you look up and down to gain momentum.
 - TrailFollower (Requires XaeroPlus)
   - Follows trails in all dimensions using either pitch40 or baritone. May break on path splits or other cases.
+- BetterStashFinder
+  - Pretty much the same as meteors stash finder except some extra features:
+    - It doesn't look for stashes in unloaded chunks
+    - It can mark the stash finds on the Xaero Minimap
+    - It can send stash hits to a discord webhook
 - OldChunkNotifier
   - Sends a message to a discord webhook when old chunks are found.
 - DiscordNotifs
