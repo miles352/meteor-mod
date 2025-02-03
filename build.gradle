@@ -45,9 +45,9 @@ dependencies {
     // XaeroPlus
     modImplementation "maven.modrinth:xaeroplus:${project.xaeroplus_version}"
     // XaeroWorldMap
-    modImplementation "maven.modrinth:xaeros-world-map:${project.xaero_worldmap_version}"
+    modImplementation "maven.modrinth:xaeros-world-map:${project.xaeros_worldmap_version}"
     // XaeroMinimap
-    modImplementation "maven.modrinth:xaeros-minimap:${project.xaero_minimap_version}"
+    modImplementation "maven.modrinth:xaeros-minimap:${project.xaeros_minimap_version}"
     // lenni
     modImplementation "net.lenni0451:LambdaEvents:2.4.2"
     modImplementation "com.github.ben-manes.caffeine:caffeine:3.1.8"
@@ -60,7 +60,8 @@ processResources {
         expand "version": project.version,
             "mc_version": project.property("minecraft_version"),
             "xp_version": project.property("xaeroplus_version"),
-            "xwm_version": project.property("xaero_worldmap_version")
+            "xwm_version": project.property("xaeros_worldmap_version"),
+            "xmm_version": project.property("xaeros_minimap_version")
     }
 }
 
