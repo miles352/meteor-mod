@@ -60,7 +60,7 @@ processResources {
         expand "version": project.version,
             "mc_version": project.property("minecraft_version"),
             "xp_version": project.property("xaeroplus_version"),
-            "xwm_version": project.property("xaero_worldmap_version"),
+            "xwm_version": project.property("xaero_worldmap_version")
     }
 }
 
