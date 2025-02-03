@@ -28,6 +28,7 @@
     "java": ">=21",
     "minecraft": ">=${mc_version}",
     "meteor-client": "*",
-    "xaeroplus": ">=${xp_version}"
+    "xaeroplus": ">=${xp_version}",
+    "xaero-minimap": ">=${xwm_version}"
   }
 }

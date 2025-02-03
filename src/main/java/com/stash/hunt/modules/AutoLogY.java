@@ -6,6 +6,8 @@ import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.misc.AutoReconnect;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket;
 import net.minecraft.text.Text;
@@ -30,8 +32,14 @@ public class AutoLogY extends Module
     @EventHandler
     private void onTick(TickEvent.Post event)
     {
+        // If in the 2b2t queue
+        if (mc.player == null || mc.player.getAbilities().allowFlying) return;
         if (mc.player.getY() < logOutY.get())
         {
+            if (Modules.get().get(AutoReconnect.class).isActive())
+            {
+                Modules.get().get(AutoReconnect.class).toggle();
+            }
             mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[AutoLogY] Player was at Y=" + mc.player.getY() + " which is below your limit of Y=" + logOutY.get())));
         }
     }

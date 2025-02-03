@@ -44,6 +44,10 @@ dependencies {
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
     // XaeroPlus
     modImplementation "maven.modrinth:xaeroplus:${project.xaeroplus_version}"
+    // XaeroWorldMap
+    modImplementation "maven.modrinth:xaeros-world-map:${project.xaero_worldmap_version}"
+    // XaeroMinimap
+    modImplementation "maven.modrinth:xaeros-minimap:${project.xaero_minimap_version}"
     // lenni
     modImplementation "net.lenni0451:LambdaEvents:2.4.2"
     modImplementation "com.github.ben-manes.caffeine:caffeine:3.1.8"
@@ -53,7 +57,10 @@ dependencies {
 
 processResources {
     filesMatching("fabric.mod.json") {
-        expand "version": project.version, "mc_version": project.property("minecraft_version"), "xp_version": project.property("xaeroplus_version")
+        expand "version": project.version,
+            "mc_version": project.property("minecraft_version"),
+            "xp_version": project.property("xaeroplus_version"),
+            "xwm_version": project.property("xaero_worldmap_version")
     }
 }
 
