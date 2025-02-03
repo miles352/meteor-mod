@@ -176,7 +176,7 @@ public class BetterStashFinder extends Module
                     chunkPos.z,
                     currentDimension
                 );
-            if ((is119NewChunk || !is112OldChunk)) return;
+            if (is119NewChunk && !is112OldChunk) return;
         }
 
         for (BlockEntity blockEntity : event.chunk().getBlockEntities().values()) {
