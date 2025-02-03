@@ -40,8 +40,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new NoJumpDelay());
         Modules.get().add(new GrimAirPlace());
         Modules.get().add(new DiscordNotifs());
-        Modules.get().add(new ChunkSizeCalculator());
-
+//        Modules.get().add(new ChunkSizeCalculator());
         Modules.get().add(new BetterStashFinder());
         Modules.get().add(new TrailFollower());
         Modules.get().add(new OldChunkNotifier());
