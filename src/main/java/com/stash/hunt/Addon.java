@@ -11,7 +11,6 @@ import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import org.slf4j.Logger;
-import net.fabricmc.loader.api.FabricLoader;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
@@ -41,16 +40,8 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new NoJumpDelay());
         Modules.get().add(new GrimAirPlace());
         Modules.get().add(new DiscordNotifs());
+        Modules.get().add(new ChunkSizeCalculator());
 
-        if (FabricLoader.getInstance().isModLoaded("xaeroplus"))
-        {
-            Modules.get().add(new TrailFollower());
-            Modules.get().add(new OldChunkNotifier());
-        }
-        else
-        {
-            LOG.info("XaeroPlus not found, disabling TrailFollower and OldChunkNotifier");
-        }
         Modules.get().add(new BetterStashFinder());
         Modules.get().add(new TrailFollower());
         Modules.get().add(new OldChunkNotifier());
