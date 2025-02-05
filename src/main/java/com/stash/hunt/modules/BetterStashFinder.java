@@ -67,6 +67,13 @@ public class BetterStashFinder extends Module
         .build()
     );
 
+    private final Setting<Boolean> shulkerInstantHit = sgGeneral.add(new BoolSetting.Builder()
+        .name("shulker-instant-hit")
+        .description("If a single shulker counts as a stash.")
+        .defaultValue(false)
+        .build()
+    );
+
     private final Setting<Integer> minimumDistance = sgGeneral.add(new IntSetting.Builder()
         .name("minimum-distance")
         .description("The minimum distance you must be from spawn to record a certain chunk.")
@@ -191,7 +198,7 @@ public class BetterStashFinder extends Module
             else if (blockEntity instanceof HopperBlockEntity) chunk.hoppers++;
         }
 
-        if (chunk.getTotal() >= minimumStorageCount.get()) {
+        if (chunk.getTotal() >= minimumStorageCount.get() || (shulkerInstantHit.get() && chunk.shulkers > 0)) {
             Chunk prevChunk = null;
             int i = chunks.indexOf(chunk);
 
