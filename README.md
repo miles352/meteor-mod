@@ -16,8 +16,6 @@
   - Logs different things to a discord webhook.
 - Pitch40Util
   - Used alongside meteors pitch40. Auto sets min and max bounds so that you continue to gain height. Also has an auto firework mode for when you lose velocity.
-- GrimDuraFirework
-  - A temporary fix for the issue on Mio client where fireworks dont work very well when using grim durability efly with the chestplate on.
 - NoJumpDelay
   - Surprisingly most clients don't have this, but why not have it on.
 - GrimAirPlace
