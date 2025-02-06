@@ -225,7 +225,7 @@ public class BetterStashFinder extends Module
                 if (sendWebhook.get() && !webhookLink.get().isEmpty())
                 {
                     String message = "Found stash at " + chunk.x + ", " + chunk.z + ".";
-                    new Thread(() -> sendWebhook(webhookLink.get(), title, message, discordId.get(), mc.player.getGameProfile().getName())).start();
+                    new Thread(() -> sendWebhook(webhookLink.get(), title, message, ping.get() ? discordId.get() : null, mc.player.getGameProfile().getName())).start();
                 }
 
                 if (saveToWaypoints.get())
