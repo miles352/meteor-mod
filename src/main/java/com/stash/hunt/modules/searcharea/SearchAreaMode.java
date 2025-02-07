@@ -89,18 +89,20 @@ public class SearchAreaMode
 
     protected void saveToJson(boolean goingToStart, PathingData pd)
     {
-            // last pos doesn't matter if disconnecting while going to start
-            if (!goingToStart) pd.currPos = mc.player.getBlockPos();
-            try {
-                File file = getJsonFile(type.toString());
-                if (file == null) return;
-                file.getParentFile().mkdirs();
-                Writer writer = new FileWriter(file);
-                GSON.toJson(pd, writer);
-                writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        // Fix issue where "null" gets saved to the file creating crashes when it gets loaded next time.
+        if (pd == null) return;
+        // last pos doesn't matter if disconnecting while going to start
+        if (!goingToStart) pd.currPos = mc.player.getBlockPos();
+        try {
+            File file = getJsonFile(type.toString());
+            if (file == null) return;
+            file.getParentFile().mkdirs();
+            Writer writer = new FileWriter(file);
+            GSON.toJson(pd, writer);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     protected static class PathingData
