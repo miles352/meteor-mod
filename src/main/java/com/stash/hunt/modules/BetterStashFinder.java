@@ -4,9 +4,10 @@ import com.stash.hunt.Addon;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.lenni0451.lambdaevents.EventHandler;
+//import meteordevelopment.orbit.EventHandler;
 import xaero.common.minimap.waypoints.Waypoint;
 import meteordevelopment.meteorclient.MeteorClient;
-import meteordevelopment.meteorclient.events.world.ChunkDataEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.WindowScreen;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
@@ -19,7 +20,6 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.render.MeteorToast;
-import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.entity.*;
 import net.minecraft.item.Items;
 import net.minecraft.registry.RegistryKey;
@@ -31,6 +31,8 @@ import xaero.hud.minimap.module.MinimapSession;
 import xaero.hud.minimap.waypoint.set.WaypointSet;
 import xaero.hud.minimap.world.MinimapWorld;
 import xaero.map.mods.SupportMods;
+import xaeroplus.XaeroPlus;
+import xaeroplus.event.ChunkDataEvent;
 import xaeroplus.module.ModuleManager;
 import xaeroplus.module.impl.OldChunks;
 import xaeroplus.module.impl.PaletteNewChunks;
@@ -151,11 +153,18 @@ public class BetterStashFinder extends Module
 
     @Override
     public void onActivate() {
+        XaeroPlus.EVENT_BUS.register(this);
         load();
     }
 
-    @EventHandler(priority = -1)
-    private void onChunkData(ChunkDataEvent event) {
+    @Override
+    public void onDeactivate() {
+        XaeroPlus.EVENT_BUS.unregister(this);
+    }
+
+    @net.lenni0451.lambdaevents.EventHandler(priority = -1)
+    public void onChunkData(ChunkDataEvent event) {
+        if (event.seenChunk()) return;
         // Check the distance.
         double chunkXAbs = Math.abs(event.chunk().getPos().x * 16);
         double chunkZAbs = Math.abs(event.chunk().getPos().z * 16);
@@ -198,7 +207,7 @@ public class BetterStashFinder extends Module
             else if (blockEntity instanceof HopperBlockEntity) chunk.hoppers++;
         }
 
-        if (chunk.getTotal() >= minimumStorageCount.get() || (shulkerInstantHit.get() && chunk.shulkers > 0)) {
+        if ((chunk.getTotal() >= minimumStorageCount.get()) || (shulkerInstantHit.get() && chunk.shulkers > 0)) {
             Chunk prevChunk = null;
             int i = chunks.indexOf(chunk);
 
