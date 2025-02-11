@@ -41,16 +41,19 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new GrimAirPlace());
         Modules.get().add(new DiscordNotifs());
 //        Modules.get().add(new ChunkSizeCalculator());
-        Modules.get().add(new TrailFollower());
-        Modules.get().add(new OldChunkNotifier());
+
+//        Modules.get().add(new EndermanItemDetector());
+
 
         if (FabricLoader.getInstance().isModLoaded("xaeroworldmap") && FabricLoader.getInstance().isModLoaded("xaerominimap"))
         {
             Modules.get().add(new BetterStashFinder());
+            Modules.get().add(new OldChunkNotifier());
+            Modules.get().add(new TrailFollower());
         }
         else
         {
-            LOG.info("Xaeros minimap and world map not found, disabling BetterStashFinder");
+            LOG.info("Xaeros minimap and world map not found, disabling modules that require it.");
         }
 
 
