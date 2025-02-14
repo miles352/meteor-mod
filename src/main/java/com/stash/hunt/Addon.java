@@ -36,7 +36,7 @@ public class Addon extends MeteorAddon {
 //        Modules.get().add(new AutoTrade());
 //        Modules.get().add(new XPBot());
 //        Modules.get().add(new UnknownAccountNotifier());
-//        Modules.get().add(new GrimEfly());
+        Modules.get().add(new GrimEfly());
         Modules.get().add(new NoJumpDelay());
         Modules.get().add(new GrimAirPlace());
         Modules.get().add(new DiscordNotifs());

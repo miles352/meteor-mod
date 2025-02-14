@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "LivingEntityMixin",
+    "EntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
