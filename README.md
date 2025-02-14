@@ -1,13 +1,13 @@
 # jeff mod (For minecraft 1.21.1 and 1.21.4)
 #### Make an issue or DM me on discord `0x658` with any questions
 ## Features
-- GrimEfly
+- GrimEfly (Credit to Divined for help with this)
   - Lets you fly with a chestplate on, which means you don't lose durability. An elytra is required in the hotbar.
   - Has a bounce mode with a baritone highway obstacle passer.
   - Bounce in 1x2 tunnels can reach up to 130bps. (Make sure to use ViaFabric 1.20.4 if having issues)
 - AFKBoostFly (Useless on current 2b anticheat)
   - Makes you look up and down to gain momentum.
-- TrailFollower (Requires XaeroPlus)
+- TrailFollower (Requires XaeroPlus, Credit to WarriorLost for creating the original TrailFollower this was based off)
   - Follows trails in all dimensions using either pitch40 or baritone. May break on path splits or other cases.
 - BetterStashFinder
   - Pretty much the same as meteors stash finder except some extra features:
