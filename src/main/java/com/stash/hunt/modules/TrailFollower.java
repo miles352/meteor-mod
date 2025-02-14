@@ -29,6 +29,7 @@ import xaeroplus.module.impl.PaletteNewChunks;
 import java.time.Duration;
 import java.util.ArrayDeque;
 
+import static com.stash.hunt.Utils.positionInDirection;
 import static com.stash.hunt.Utils.sendWebhook;
 
 public class TrailFollower extends Module
@@ -636,12 +637,6 @@ public class TrailFollower extends Module
     {
         double diff = (target - current + 180) % 360 - 180;
         return diff < -180 ? diff + 360 : diff;
-    }
-
-    private Vec3d positionInDirection(Vec3d pos, double yaw, double distance)
-    {
-        Vec3d offset = (new Vec3d(Math.sin(-yaw * Math.PI / 180), 0, Math.cos(-yaw * Math.PI / 180)).normalize()).multiply(distance);
-        return pos.add(offset);
     }
 
     private void log(String message)

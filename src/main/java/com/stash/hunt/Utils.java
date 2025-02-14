@@ -5,10 +5,11 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -16,7 +17,6 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownServiceException;
-import java.util.ArrayDeque;
 
 public class Utils
 {
@@ -75,6 +75,24 @@ public class Utils
             }
         }
         return airCount;
+    }
+
+    public static Vec3d positionInDirection(Vec3d pos, double yaw, double distance)
+    {
+        Vec3d offset = (new Vec3d(Math.sin(-yaw * Math.PI / 180), 0, Math.cos(-yaw * Math.PI / 180)).normalize()).multiply(distance);
+        return pos.add(offset);
+    }
+
+    public static int totalInvCount(MinecraftClient mc, Item item) {
+        if (mc.player == null) return 0;
+        int itemCount = 0;
+        for (int i = 0; i < 36; i++) {
+            ItemStack stack = mc.player.getInventory().getStack(i);
+            if (stack.getItem() == item) {
+                itemCount += stack.getCount();
+            }
+        }
+        return itemCount;
     }
 
 
