@@ -28,12 +28,12 @@ public abstract class LivingEntityMixin
     public abstract Brain<?> getBrain();
 
     Module grimEfly = Modules.get().get(GrimEfly.class);
-    Module noJumpDelay = Modules.get().get(NoJumpDelay.class);
+    Module noJumpDelay = Modules.get().get(com.stash.hunt.modules.NoJumpDelay.class);
 
     @Inject(at = @At("HEAD"), method = "Lnet/minecraft/entity/LivingEntity;tickMovement()V")
     private void tickMovement(CallbackInfo ci)
     {
-        if (mc.player.getBrain().equals(this.getBrain()) && ((grimEfly != null && grimEfly.isActive() && !((Setting<Boolean>)grimEfly.settings.get("paused")).get()) || noJumpDelay.isActive()))
+        if (mc.player != null && mc.player.getBrain().equals(this.getBrain()) && ((grimEfly != null && grimEfly.isActive() && !((Setting<Boolean>)grimEfly.settings.get("paused")).get()) || noJumpDelay.isActive()))
         {
             this.jumpingCooldown = 0;
         }
@@ -42,7 +42,7 @@ public abstract class LivingEntityMixin
     @Inject(at = @At("HEAD"), method = "Lnet/minecraft/entity/LivingEntity;tickFallFlying()V", cancellable = true)
     private void tickFallFlying(CallbackInfo ci)
     {
-        if (mc.player.getBrain().equals(this.getBrain()) && grimEfly != null && grimEfly.isActive() && !((Setting<Boolean>)grimEfly.settings.get("paused")).get())
+        if (mc.player != null && mc.player.getBrain().equals(this.getBrain()) && grimEfly != null && grimEfly.isActive() && !((Setting<Boolean>)grimEfly.settings.get("paused")).get())
         {
             this.fallFlyingTicks++;
             ci.cancel();
@@ -52,7 +52,7 @@ public abstract class LivingEntityMixin
     @Inject(at = @At("HEAD"), method = "Lnet/minecraft/entity/LivingEntity;isFallFlying()Z", cancellable = true)
     private void isFallFlying(CallbackInfoReturnable<Boolean> cir)
     {
-        if (mc.player.getBrain().equals(this.getBrain()) && grimEfly != null && grimEfly.isActive() && !((Setting<Boolean>)grimEfly.settings.get("paused")).get())
+        if (mc.player != null && mc.player.getBrain().equals(this.getBrain()) && grimEfly != null && grimEfly.isActive() && !((Setting<Boolean>)grimEfly.settings.get("paused")).get())
         {
             cir.setReturnValue(true);
         }

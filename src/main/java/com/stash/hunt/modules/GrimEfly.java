@@ -1,9 +1,7 @@
 package com.stash.hunt.modules;
 
 import baritone.api.BaritoneAPI;
-import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalBlock;
-import baritone.api.pathing.goals.GoalGetToBlock;
 import meteordevelopment.meteorclient.events.world.PlaySoundEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -25,11 +23,9 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
+import static com.stash.hunt.Utils.positionInDirection;
 import static com.stash.hunt.Utils.setPressed;
 
 public class GrimEfly extends Module {
@@ -77,7 +73,7 @@ public class GrimEfly extends Module {
 
     private final Setting<Boolean> highwayObstaclePasser = sgGeneral.add(new BoolSetting.Builder()
         .name("Highway Obstacle Passer")
-        .description("Uses baritone to pass obstacles.")
+        .description("Uses baritone to pass obstacles. Make sure to set the YAW lock as it uses this value to calculate the block to go to.")
         .defaultValue(false)
         .visible(bounce::get)
         .build()
@@ -96,6 +92,13 @@ public class GrimEfly extends Module {
         .description("The Y level to bounce at.")
         .defaultValue(120)
         .visible(() -> bounce.get() && highwayObstaclePasser.get())
+        .build()
+    );
+
+    private final Setting<Boolean> assumeHighwayDirs = sgGeneral.add(new BoolSetting.Builder()
+        .name("Lock To Highway Directions")
+        .description("Aligns you on the highways. Only works for the main 8 highway directions.")
+        .defaultValue(true)
         .build()
     );
 
@@ -125,6 +128,11 @@ public class GrimEfly extends Module {
         startSprinting = mc.player.isSprinting();
         startForwards = Input.isPressed(mc.options.forwardKey);
         paused.set(false);
+
+        if (bounce.get())
+        {
+            BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoal(null);
+        }
     }
 
     @Override
@@ -132,7 +140,10 @@ public class GrimEfly extends Module {
     {
         if (mc.player == null) return;
 
-        BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoal(null);
+        if (bounce.get())
+        {
+            BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoal(null);
+        }
 
         mc.player.setSprinting(startSprinting);
         setPressed(mc.options.forwardKey, startForwards);
@@ -150,7 +161,7 @@ public class GrimEfly extends Module {
         if (bounce.get())
         {
             // if still pathing, wait for that to complete
-            if (highwayObstaclePasser.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().isActive())
+            if (highwayObstaclePasser.get() && BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().getGoal() != null)
             {
                 paused.set(true);
                 return;
@@ -161,8 +172,19 @@ public class GrimEfly extends Module {
                 || mc.player.horizontalCollision))
             {
                 paused.set(true);
-                Vec3d positionInDirection = mc.player.getPos().add(Vec3d.of(mc.player.getMovementDirection().getVector()).multiply(distance.get()));
-                BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(new BlockPos((int)positionInDirection.x, targetY.get(), (int)positionInDirection.z)));
+                double targetYaw = lockYaw.get() ? yaw.get() : mc.player.getYaw();
+                Vec3d pos;
+                if (assumeHighwayDirs.get())
+                {
+                    Vec3d playerPos = normalizedPositionOnAxis(mc.player.getPos()).multiply(mc.player.getPos().multiply(1,0,1).length());
+                    pos = positionInDirection(playerPos, targetYaw, distance.get());
+                }
+                else
+                {
+                    // TODO: Make this better
+                    pos = positionInDirection(mc.player.getPos(), targetYaw, distance.get());
+                }
+                BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(new BlockPos((int)pos.x, targetY.get(), (int)pos.z)));
             }
             else
             {
@@ -203,6 +225,15 @@ public class GrimEfly extends Module {
         swapToItem(itemResult.slot());
         // send packet
         mc.player.networkHandler.sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+    }
+
+    Vec3d normalizedPositionOnAxis(Vec3d pos) {
+        double angle = -Math.atan2(pos.x, pos.z);
+        double angleDeg = Math.toDegrees(angle);
+
+        double ordinalAngle = Math.round(angleDeg / 45.0f) * 45;
+
+        return positionInDirection(new Vec3d(0,0,0), ordinalAngle, 1);
     }
 
     @EventHandler
