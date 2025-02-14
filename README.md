@@ -1,6 +1,10 @@
 # jeff mod (For minecraft 1.21.1 and 1.21.4)
 #### Make an issue or DM me on discord `0x658` with any questions
 ## Features
+- GrimEfly
+  - Lets you fly with a chestplate on, which means you don't lose durability. An elytra is required in the hotbar.
+  - Has a bounce mode with a baritone highway obstacle passer.
+  - Bounce in 1x2 tunnels can reach up to 130bps. (Make sure to use ViaFabric 1.20.4 if having issues)
 - AFKBoostFly (Useless on current 2b anticheat)
   - Makes you look up and down to gain momentum.
 - TrailFollower (Requires XaeroPlus)
