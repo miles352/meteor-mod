@@ -20,7 +20,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public abstract class LivingEntityMixin
 {
     @Shadow
-    protected int fallFlyingTicks;
+    protected int glidingTicks;
     @Shadow
     private int jumpingCooldown;
 
@@ -39,18 +39,18 @@ public abstract class LivingEntityMixin
         }
     }
 
-    @Inject(at = @At("HEAD"), method = "Lnet/minecraft/entity/LivingEntity;tickFallFlying()V", cancellable = true)
-    private void tickFallFlying(CallbackInfo ci)
+    @Inject(at = @At("HEAD"), method = "Lnet/minecraft/entity/LivingEntity;tickGliding()V", cancellable = true)
+    private void tickGliding(CallbackInfo ci)
     {
         if (mc.player != null && mc.player.getBrain().equals(this.getBrain()) && grimEfly != null && grimEfly.isActive() && !((Setting<Boolean>)grimEfly.settings.get("paused")).get())
         {
-            this.fallFlyingTicks++;
+            this.glidingTicks++;
             ci.cancel();
         }
     }
 
-    @Inject(at = @At("HEAD"), method = "Lnet/minecraft/entity/LivingEntity;isFallFlying()Z", cancellable = true)
-    private void isFallFlying(CallbackInfoReturnable<Boolean> cir)
+    @Inject(at = @At("HEAD"), method = "Lnet/minecraft/entity/LivingEntity;isGliding()Z", cancellable = true)
+    private void isGliding(CallbackInfoReturnable<Boolean> cir)
     {
         if (mc.player != null && mc.player.getBrain().equals(this.getBrain()) && grimEfly != null && grimEfly.isActive() && !((Setting<Boolean>)grimEfly.settings.get("paused")).get())
         {
