@@ -2,6 +2,7 @@ package com.stash.hunt.modules;
 
 import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalBlock;
+import meteordevelopment.meteorclient.events.entity.player.InteractItemEvent;
 import meteordevelopment.meteorclient.events.world.PlaySoundEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -10,6 +11,7 @@ import meteordevelopment.meteorclient.utils.misc.input.Input;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.item.FireworkRocketItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.*;
@@ -19,14 +21,15 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import com.stash.hunt.Addon;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
 
-import static com.stash.hunt.Utils.positionInDirection;
-import static com.stash.hunt.Utils.setPressed;
+import static com.stash.hunt.Utils.*;
 
 public class GrimEfly extends Module {
 
@@ -99,6 +102,15 @@ public class GrimEfly extends Module {
         .name("Lock To Highway Directions")
         .description("Aligns you on the highways. Only works for the main 8 highway directions.")
         .defaultValue(true)
+        .visible(() -> bounce.get() && highwayObstaclePasser.get())
+        .build()
+    );
+
+    private final Setting<BlockPos> baritoneOffset = sgGeneral.add(new BlockPosSetting.Builder()
+        .name("Baritone Offset")
+        .description("The offset in blocks from where goals should be set.")
+        .defaultValue(new BlockPos(0,0,0))
+        .visible(() -> bounce.get() && highwayObstaclePasser.get())
         .build()
     );
 
@@ -184,7 +196,8 @@ public class GrimEfly extends Module {
                     // TODO: Make this better
                     pos = positionInDirection(mc.player.getPos(), targetYaw, distance.get());
                 }
-                BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(new BlockPos((int)pos.x, targetY.get(), (int)pos.z)));
+                BlockPos goal = new BlockPos((int)pos.x + baritoneOffset.get().getX(), targetY.get() + baritoneOffset.get().getY(), (int)pos.z + baritoneOffset.get().getZ());
+                BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(goal));
             }
             else
             {
